@@ -1,0 +1,15 @@
+.DS_Store
+
+# Xcode generated files
+DerivedData/
+.derivedData/
+build/
+xcuserdata/
+*.xcuserstate
+
+# Swift Package Manager
+.build/
+Package.resolved
+
+# Private planning material
+꽃갈피 어플.pdf
