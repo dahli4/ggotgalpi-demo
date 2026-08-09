@@ -130,6 +130,12 @@ final class DemoStore: ObservableObject {
 
 extension Date {
     var shortKoreanDate: String {
-        formatted(.dateTime.year().month().day())
+        formatted(
+            .dateTime
+                .year()
+                .month()
+                .day()
+                .locale(Locale(identifier: "ko_KR"))
+        )
     }
 }
