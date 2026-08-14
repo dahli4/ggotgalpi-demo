@@ -21,7 +21,7 @@ struct AddBookView: View {
                 } header: {
                     Text("새 책")
                 } footer: {
-                    Text("데모 버전에서는 표지를 자동으로 만들고, 다음 단계에서 사진 선택 기능을 연결할 수 있어요.")
+                    Text("데모에서는 책마다 구분 색상을 자동으로 지정합니다.")
                 }
             }
             .scrollContentBackground(.hidden)

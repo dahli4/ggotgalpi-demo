@@ -14,12 +14,12 @@ struct BookDetailView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 25) {
-                    HStack(alignment: .top, spacing: 20) {
-                        CoverPlaceholder(title: book.title, color: book.coverColor, size: CGSize(width: 112, height: 160))
+                    HStack(alignment: .center, spacing: 16) {
+                        BookColorMark(title: book.title, color: book.coverColor, size: 72)
 
                         VStack(alignment: .leading, spacing: 9) {
                             Text(book.title)
-                                .font(.system(size: 25, weight: .medium, design: .serif))
+                                .font(.title2.weight(.semibold))
                                 .foregroundStyle(GgotgalpiTheme.ink)
                             Text(book.author)
                                 .font(.subheadline)
@@ -45,7 +45,7 @@ struct BookDetailView: View {
                         showingAddEntry = true
                     } label: {
                         Label("감상 기록 남기기", systemImage: "pencil.line")
-                            .font(.system(.headline, design: .serif))
+                            .font(.headline)
                             .foregroundStyle(GgotgalpiTheme.paper)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 14)
@@ -92,7 +92,7 @@ struct DetailStat: View {
     var body: some View {
         VStack(spacing: 5) {
             Text(value)
-                .font(.system(size: 21, weight: .medium, design: .serif))
+                .font(.title2.weight(.semibold))
                 .foregroundStyle(GgotgalpiTheme.ink)
             Text(title)
                 .font(.caption2)
@@ -109,7 +109,7 @@ struct ReadingEntryRow: View {
         VStack(alignment: .leading, spacing: 9) {
             HStack {
                 Text(entry.date.shortKoreanDate)
-                    .font(.system(.subheadline, design: .serif))
+                    .font(.subheadline.weight(.medium))
                     .foregroundStyle(GgotgalpiTheme.ink)
                 Spacer()
                 Text("\(entry.readingRound)회독 · p.\(entry.pageFrom)-p.\(entry.pageTo)")
