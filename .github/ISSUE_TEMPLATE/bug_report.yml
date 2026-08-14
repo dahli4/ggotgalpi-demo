@@ -1,0 +1,38 @@
+name: 버그 제보
+description: 재현 가능한 문제를 알려 주세요.
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: 제보 전 기존 이슈에 같은 문제가 있는지 확인해 주세요.
+  - type: textarea
+    id: problem
+    attributes:
+      label: 문제 설명
+      description: 기대한 결과와 실제 결과를 함께 적어 주세요.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: 재현 방법
+      placeholder: |
+        1. 앱을 실행합니다.
+        2. …
+        3. 문제가 발생합니다.
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: 실행 환경
+      description: iOS 버전, 기기 또는 시뮬레이터, Xcode 버전을 적어 주세요.
+      placeholder: iOS 18.0, iPhone 16 Simulator, Xcode 16.0
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: 추가 자료
+      description: 스크린샷, 화면 녹화, 로그가 있다면 첨부해 주세요. 개인 정보는 가려 주세요.

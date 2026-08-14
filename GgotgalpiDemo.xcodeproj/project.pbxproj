@@ -13,6 +13,10 @@
 		A10000010000000000000004 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000004 /* Theme.swift */; };
 		A10000010000000000000005 /* BookDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000005 /* BookDetailView.swift */; };
 		A10000010000000000000006 /* AddBookView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000006 /* AddBookView.swift */; };
+		A10000010000000000000007 /* BookshelfView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000008 /* BookshelfView.swift */; };
+		A10000010000000000000008 /* CalendarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000009 /* CalendarView.swift */; };
+		A10000010000000000000009 /* MyRecordView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000010 /* MyRecordView.swift */; };
+		A10000010000000000000010 /* CalendarBookCoverStack.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000011 /* CalendarBookCoverStack.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -23,6 +27,10 @@
 		A20000010000000000000005 /* BookDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookDetailView.swift; sourceTree = "<group>"; };
 		A20000010000000000000006 /* AddBookView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddBookView.swift; sourceTree = "<group>"; };
 		A20000010000000000000007 /* GgotgalpiDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GgotgalpiDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A20000010000000000000008 /* BookshelfView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookshelfView.swift; sourceTree = "<group>"; };
+		A20000010000000000000009 /* CalendarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarView.swift; sourceTree = "<group>"; };
+		A20000010000000000000010 /* MyRecordView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyRecordView.swift; sourceTree = "<group>"; };
+		A20000010000000000000011 /* CalendarBookCoverStack.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarBookCoverStack.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -47,12 +55,9 @@
 		A40000010000000000000002 /* GgotgalpiDemo */ = {
 			isa = PBXGroup;
 			children = (
-				A20000010000000000000001 /* GgotgalpiDemoApp.swift */,
-				A20000010000000000000002 /* ContentView.swift */,
-				A20000010000000000000003 /* Models.swift */,
-				A20000010000000000000004 /* Theme.swift */,
-				A20000010000000000000005 /* BookDetailView.swift */,
-				A20000010000000000000006 /* AddBookView.swift */,
+				A40000010000000000000004 /* App */,
+				A40000010000000000000005 /* Core */,
+				A40000010000000000000006 /* Features */,
 			);
 			path = GgotgalpiDemo;
 			sourceTree = "<group>";
@@ -63,6 +68,61 @@
 				A20000010000000000000007 /* GgotgalpiDemo.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		A40000010000000000000004 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				A20000010000000000000001 /* GgotgalpiDemoApp.swift */,
+				A20000010000000000000002 /* ContentView.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		A40000010000000000000005 /* Core */ = {
+			isa = PBXGroup;
+			children = (
+				A20000010000000000000003 /* Models.swift */,
+				A20000010000000000000004 /* Theme.swift */,
+			);
+			path = Core;
+			sourceTree = "<group>";
+		};
+		A40000010000000000000006 /* Features */ = {
+			isa = PBXGroup;
+			children = (
+				A40000010000000000000007 /* Calendar */,
+				A40000010000000000000008 /* Library */,
+				A40000010000000000000009 /* Journal */,
+			);
+			path = Features;
+			sourceTree = "<group>";
+		};
+		A40000010000000000000007 /* Calendar */ = {
+			isa = PBXGroup;
+			children = (
+				A20000010000000000000009 /* CalendarView.swift */,
+				A20000010000000000000011 /* CalendarBookCoverStack.swift */,
+			);
+			path = Calendar;
+			sourceTree = "<group>";
+		};
+		A40000010000000000000008 /* Library */ = {
+			isa = PBXGroup;
+			children = (
+				A20000010000000000000008 /* BookshelfView.swift */,
+				A20000010000000000000006 /* AddBookView.swift */,
+				A20000010000000000000005 /* BookDetailView.swift */,
+			);
+			path = Library;
+			sourceTree = "<group>";
+		};
+		A40000010000000000000009 /* Journal */ = {
+			isa = PBXGroup;
+			children = (
+				A20000010000000000000010 /* MyRecordView.swift */,
+			);
+			path = Journal;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -134,6 +194,10 @@
 				A10000010000000000000004 /* Theme.swift in Sources */,
 				A10000010000000000000005 /* BookDetailView.swift in Sources */,
 				A10000010000000000000006 /* AddBookView.swift in Sources */,
+				A10000010000000000000007 /* BookshelfView.swift in Sources */,
+				A10000010000000000000008 /* CalendarView.swift in Sources */,
+				A10000010000000000000009 /* MyRecordView.swift in Sources */,
+				A10000010000000000000010 /* CalendarBookCoverStack.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -155,12 +219,17 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "꽃갈피";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.books";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = ("$(inherited)", "@executable_path/Frameworks");
 				MARKETING_VERSION = 0.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.ggotgalpi.demo;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
@@ -183,12 +252,17 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "꽃갈피";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.books";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = ("$(inherited)", "@executable_path/Frameworks");
 				MARKETING_VERSION = 0.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.ggotgalpi.demo;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
