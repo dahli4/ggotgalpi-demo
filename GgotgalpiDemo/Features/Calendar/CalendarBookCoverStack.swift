@@ -33,18 +33,8 @@ struct CalendarBookCoverStack: View {
         GeometryReader { proxy in
             let layout = layout(in: proxy.size)
 
-            VStack(spacing: 0) {
-                HStack {
-                    Text(date.formatted(.dateTime.day()))
-                        .font(.subheadline.weight(isSelected ? .bold : .medium))
-                        .foregroundStyle(GgotgalpiTheme.ink)
-                        .padding(.leading, 6)
-
-                    Spacer(minLength: 0)
-                }
-                .frame(height: layout.dateAreaHeight)
-
-                ZStack(alignment: .bottomLeading) {
+            ZStack(alignment: .topLeading) {
+                ZStack {
                     // 첫 작품이 마지막에 그려져 항상 최전면에 남습니다.
                     ForEach(Array(visibleBooks.enumerated()).reversed(), id: \.element.id) { index, book in
                         CalendarBookCover(book: book, size: layout.coverSize)
@@ -54,7 +44,9 @@ struct CalendarBookCoverStack: View {
                             )
                     }
                 }
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+
+                calendarDayNumber
             }
         }
     }
@@ -64,9 +56,8 @@ struct CalendarBookCoverStack: View {
         let horizontalOffset: CGFloat = isStacked ? 3 : 0
         // 뒤 표지는 오른쪽·위쪽으로만 살짝 노출해 앞 표지의 크기를 지킵니다.
         let verticalOffset: CGFloat = isStacked ? -2 : 0
-        let dateAreaHeight: CGFloat = 20
-        let availableHeight = max(0, container.height - dateAreaHeight - 2)
-        let maximumWidthRatio: CGFloat = isStacked ? 0.88 : 0.98
+        let availableHeight = max(0, container.height - 3)
+        let maximumWidthRatio: CGFloat = isStacked ? 0.82 : 0.90
         let widthByCell = container.width * maximumWidthRatio
         let widthByStack = max(0, container.width - CGFloat(stackCount) * horizontalOffset)
         let coverWidth = min(widthByCell, widthByStack, availableHeight * (2 / 3))
@@ -74,9 +65,16 @@ struct CalendarBookCoverStack: View {
         return CoverLayout(
             coverSize: CGSize(width: coverWidth, height: coverWidth * 1.5),
             horizontalOffset: horizontalOffset,
-            verticalOffset: verticalOffset,
-            dateAreaHeight: dateAreaHeight
+            verticalOffset: verticalOffset
         )
+    }
+
+    private var calendarDayNumber: some View {
+        Text(date.formatted(.dateTime.day()))
+            .font(.subheadline.weight(isSelected ? .bold : .medium))
+            .foregroundStyle(GgotgalpiTheme.ink)
+            .padding(.leading, 6)
+            .padding(.top, 5)
     }
 
     private var accessibilityDescription: String {
@@ -85,7 +83,7 @@ struct CalendarBookCoverStack: View {
     }
 }
 
-/// 감상 작품이 한 권인 날짜 전용 표지입니다. 표지 비율을 유지한 채 셀 중앙에 온전히 배치합니다.
+/// 감상 작품이 한 권인 날짜 전용 표지입니다. 표지 비율을 유지한 채 날짜 칸의 대부분을 채웁니다.
 private struct CalendarSingleBookCover: View {
     let book: Book
     let date: Date
@@ -93,20 +91,20 @@ private struct CalendarSingleBookCover: View {
 
     var body: some View {
         GeometryReader { proxy in
-            let coverWidth = min(proxy.size.width * 0.98, proxy.size.height * (2 / 3))
+            let availableHeight = max(0, proxy.size.height - 3)
+            let coverWidth = min(proxy.size.width * 0.90, availableHeight * (2 / 3))
             let coverSize = CGSize(width: coverWidth, height: coverWidth * 1.5)
 
             ZStack(alignment: .topLeading) {
                 CalendarBookCover(book: book, size: coverSize)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
 
                 Text(date.formatted(.dateTime.day()))
                     .font(.subheadline.weight(isSelected ? .bold : .medium))
                     .foregroundStyle(GgotgalpiTheme.ink)
-                    .shadow(color: GgotgalpiTheme.paper.opacity(0.95), radius: 1)
-                    .padding(5)
+                    .padding(.leading, 6)
+                    .padding(.top, 5)
             }
-            .frame(width: coverSize.width, height: coverSize.height)
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
         }
     }
 }
@@ -115,7 +113,6 @@ private struct CoverLayout {
     let coverSize: CGSize
     let horizontalOffset: CGFloat
     let verticalOffset: CGFloat
-    let dateAreaHeight: CGFloat
 }
 
 private extension Array {

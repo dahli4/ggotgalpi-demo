@@ -81,7 +81,14 @@ struct CalendarView: View {
             }
         }
         .sheet(isPresented: $isShowingDayEntries) {
-            CalendarDayEntriesSheet(date: selectedDate, entries: entries(on: selectedDate))
+            CalendarDayEntriesSheet(
+                date: selectedDate,
+                entries: entries(on: selectedDate),
+                orderedBooks: books(on: selectedDate, applyingCategoryFilter: false),
+                saveOrder: { bookIDs in
+                    store.saveCalendarBookOrder(bookIDs, for: selectedDate)
+                }
+            )
         }
     }
 }
@@ -96,60 +103,131 @@ private struct CalendarBookReorderRequest: Identifiable {
 private struct CalendarDayEntriesSheet: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var store: DemoStore
+    @State private var books: [Book]
+    @State private var editMode: EditMode = .inactive
+
     let date: Date
     let entries: [ReadingEntry]
+    let saveOrder: ([UUID]) -> Void
+
+    init(
+        date: Date,
+        entries: [ReadingEntry],
+        orderedBooks: [Book],
+        saveOrder: @escaping ([UUID]) -> Void
+    ) {
+        self.date = date
+        self.entries = entries
+        self.saveOrder = saveOrder
+        _books = State(initialValue: orderedBooks)
+    }
+
+    private var canReorder: Bool {
+        books.count > 1
+    }
+
+    private func entries(for book: Book) -> [ReadingEntry] {
+        entries
+            .filter { $0.bookID == book.id }
+            .sorted { $0.createdAt > $1.createdAt }
+    }
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: GgotgalpiTheme.Spacing.content) {
-                    if entries.isEmpty {
-                        ReadingEmptyState(
-                            title: "아직 남긴 감상이 없어요",
-                            message: "책장에서 작품을 고르고 이 날의 마음을 기록해 보세요."
-                        )
-                    } else {
-                        ForEach(entries) { entry in
-                            if let book = store.book(for: entry.bookID) {
-                                HStack(alignment: .top, spacing: GgotgalpiTheme.Spacing.control) {
-                                    BookColorMark(title: book.title, color: book.coverColor, size: 44)
+            List {
+                if entries.isEmpty {
+                    ReadingEmptyState(
+                        title: "아직 남긴 감상이 없어요",
+                        message: "책장에서 작품을 고르고 이 날의 마음을 기록해 보세요."
+                    )
+                    .listRowBackground(GgotgalpiTheme.paper)
+                } else {
+                    if canReorder {
+                        Section {
+                            Text(editMode == .active
+                                 ? "오른쪽 손잡이를 드래그해 순서를 정하세요. 맨 위 작품이 달력의 최전면 표지가 됩니다."
+                                 : "감상문을 길게 눌러 작품 순서를 바꿀 수 있어요.")
+                                .font(.caption)
+                                .foregroundStyle(GgotgalpiTheme.secondaryInk)
+                                .listRowBackground(GgotgalpiTheme.paperDeep.opacity(0.58))
+                        }
+                    }
 
-                                    VStack(alignment: .leading, spacing: GgotgalpiTheme.Spacing.compact) {
-                                        HStack(alignment: .firstTextBaseline) {
-                                            Text(book.title)
-                                                .font(.headline)
-                                                .foregroundStyle(GgotgalpiTheme.ink)
-                                            Spacer()
-                                            Text("p.\(entry.pageFrom)-\(entry.pageTo)")
-                                                .font(.caption)
-                                                .foregroundStyle(GgotgalpiTheme.secondaryInk)
-                                        }
-
-                                        Text(entry.note)
-                                            .font(.body)
-                                            .foregroundStyle(GgotgalpiTheme.ink)
-                                            .lineSpacing(4)
-                                            .fixedSize(horizontal: false, vertical: true)
-                                    }
+                    Section {
+                        ForEach(books) { book in
+                            CalendarDayBookEntryRow(book: book, entries: entries(for: book))
+                                .contentShape(Rectangle())
+                                .onLongPressGesture(minimumDuration: 0.45) {
+                                    guard canReorder else { return }
+                                    editMode = .active
                                 }
-                                .padding(.vertical, 4)
-                                .accessibilityElement(children: .combine)
-                            }
+                        }
+                        .onMove { source, destination in
+                            books.move(fromOffsets: source, toOffset: destination)
+                            saveOrder(books.map(\.id))
                         }
                     }
                 }
-                .padding(GgotgalpiTheme.Spacing.screen)
             }
-            .scrollIndicators(.hidden)
+            .environment(\.editMode, $editMode)
+            .scrollContentBackground(.hidden)
+            .background(GgotgalpiTheme.paper)
             .navigationTitle(date.formatted(.dateTime.month().day().weekday(.wide).locale(Locale(identifier: "ko_KR"))))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("닫기") { dismiss() }
+                    if editMode == .active {
+                        Button("정렬 완료") { editMode = .inactive }
+                    } else {
+                        Button("닫기") { dismiss() }
+                    }
                 }
             }
         }
         .paperBackground()
+    }
+}
+
+private struct CalendarDayBookEntryRow: View {
+    let book: Book
+    let entries: [ReadingEntry]
+
+    var body: some View {
+        HStack(alignment: .top, spacing: GgotgalpiTheme.Spacing.control) {
+            BookColorMark(title: book.title, color: book.coverColor, size: 44)
+
+            VStack(alignment: .leading, spacing: GgotgalpiTheme.Spacing.compact) {
+                Text(book.title)
+                    .font(.headline)
+                    .foregroundStyle(GgotgalpiTheme.ink)
+
+                ForEach(entries) { entry in
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack(alignment: .firstTextBaseline) {
+                            Text("p.\(entry.pageFrom)-\(entry.pageTo)")
+                                .font(.caption)
+                                .foregroundStyle(GgotgalpiTheme.secondaryInk)
+                            Spacer()
+                            Text("\(entry.readingRound)회독")
+                                .font(.caption)
+                                .foregroundStyle(GgotgalpiTheme.secondaryInk)
+                        }
+
+                        Text(entry.note)
+                            .font(.body)
+                            .foregroundStyle(GgotgalpiTheme.ink)
+                            .lineSpacing(4)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+
+                    if entry.id != entries.last?.id {
+                        Divider()
+                    }
+                }
+            }
+        }
+        .padding(.vertical, 4)
+        .accessibilityElement(children: .combine)
     }
 }
 
@@ -183,7 +261,8 @@ private struct MonthlyCalendarGrid: View {
             // 상단 필터를 남기고도 그리드가 화면을 꽉 채우도록 월별 행 높이를 계산합니다.
             let weekdayHeight: CGFloat = 18
             let headerHeight: CGFloat = 44
-            let contentHeight = max(0, proxy.size.height - headerHeight - GgotgalpiTheme.Spacing.control - weekdayHeight)
+            let calendarCardInsets: CGFloat = 16
+            let contentHeight = max(0, proxy.size.height - calendarCardInsets - headerHeight - GgotgalpiTheme.Spacing.control - weekdayHeight)
             let dayCellHeight = max(58, contentHeight / CGFloat(weekCount))
 
             VStack(spacing: GgotgalpiTheme.Spacing.control) {
@@ -197,7 +276,7 @@ private struct MonthlyCalendarGrid: View {
 
                     Spacer()
 
-                    Text(displayedMonth.formatted(.dateTime.year().month(.wide).locale(Locale(identifier: "ko_KR"))))
+                    Text(monthTitle)
                         .font(.headline)
                         .foregroundStyle(GgotgalpiTheme.ink)
 
@@ -237,7 +316,23 @@ private struct MonthlyCalendarGrid: View {
                     }
                 }
             }
+            .padding(.horizontal, 8)
+            .padding(.vertical, 8)
+            .background(GgotgalpiTheme.paper.opacity(0.72))
+            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .overlay {
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .stroke(GgotgalpiTheme.paperDeep.opacity(0.75), lineWidth: 0.8)
+            }
+            .shadow(color: .black.opacity(0.07), radius: 12, y: 5)
         }
+    }
+
+    private var monthTitle: String {
+        let components = calendar.dateComponents([.year, .month], from: displayedMonth)
+        let year = (components.year ?? 0) % 100
+        let month = components.month ?? 0
+        return "\(year)년 \(month)월"
     }
 }
 
@@ -259,10 +354,7 @@ private struct CalendarDayCell: View {
                     } label: {
                         Text(date.formatted(.dateTime.day()))
                             .font(.subheadline.weight(isSelected ? .bold : .regular))
-                            .foregroundStyle(isSelected ? GgotgalpiTheme.paper : GgotgalpiTheme.ink)
-                            .frame(width: 28, height: 28)
-                            .background(isSelected ? GgotgalpiTheme.accent : .clear)
-                            .clipShape(Circle())
+                            .foregroundStyle(GgotgalpiTheme.ink)
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel(date.shortKoreanDate)
