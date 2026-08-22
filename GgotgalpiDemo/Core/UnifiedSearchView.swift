@@ -58,6 +58,10 @@ struct UnifiedSearchView: View {
         .trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
+    private var compactTextQuery: String {
+        textQuery.removingWhitespaceAndNewlines
+    }
+
     private var hasSearchTerm: Bool {
         !normalizedQuery.isEmpty
     }
@@ -178,8 +182,7 @@ struct UnifiedSearchView: View {
         guard !textQuery.isEmpty else { return dateFilter != nil }
         let searchableText = [book.title, book.author, book.category.rawValue, book.readingStatus.rawValue]
             .joined(separator: " ")
-            .lowercased()
-        return searchableText.localizedCaseInsensitiveContains(textQuery)
+        return matchesSearchText(searchableText)
     }
 
     private func matches(entry: ReadingEntry) -> Bool {
@@ -187,8 +190,12 @@ struct UnifiedSearchView: View {
         guard let book = store.book(for: entry.bookID) else { return false }
         let searchableText = [book.title, book.author, entry.note]
             .joined(separator: " ")
-            .lowercased()
-        return searchableText.localizedCaseInsensitiveContains(textQuery)
+        return matchesSearchText(searchableText)
+    }
+
+    private func matchesSearchText(_ searchableText: String) -> Bool {
+        searchableText.localizedCaseInsensitiveContains(textQuery)
+            || searchableText.removingWhitespaceAndNewlines.localizedCaseInsensitiveContains(compactTextQuery)
     }
 
     @ViewBuilder
@@ -203,6 +210,14 @@ struct UnifiedSearchView: View {
                 .buttonStyle(.plain)
             }
         }
+    }
+}
+
+private extension String {
+    var removingWhitespaceAndNewlines: String {
+        unicodeScalars.filter { !CharacterSet.whitespacesAndNewlines.contains($0) }
+            .map(String.init)
+            .joined()
     }
 }
 

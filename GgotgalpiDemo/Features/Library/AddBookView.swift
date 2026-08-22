@@ -55,6 +55,13 @@ struct AddReadingEntryView: View {
     @State private var pageTo = ""
     @State private var note = ""
     @State private var readingRound = 1
+    @State private var hasAppliedSuggestedStartPage = false
+
+    private var mostRecentPage: Int? {
+        store.entries(for: book.id)
+            .max { $0.createdAt < $1.createdAt }?
+            .pageTo
+    }
 
     var body: some View {
         NavigationStack {
@@ -107,5 +114,16 @@ struct AddReadingEntryView: View {
         }
         .presentationDetents([.large])
         .paperBackground()
+        .onAppear {
+            guard
+                !hasAppliedSuggestedStartPage,
+                book.readingStatus == .reading,
+                pageFrom.isEmpty,
+                let mostRecentPage
+            else { return }
+
+            pageFrom = String(mostRecentPage)
+            hasAppliedSuggestedStartPage = true
+        }
     }
 }

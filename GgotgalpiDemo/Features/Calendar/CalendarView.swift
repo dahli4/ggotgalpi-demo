@@ -11,15 +11,17 @@ struct CalendarView: View {
     @State private var isShowingDayEntries = false
     @State private var isShowingSearch = false
 
-    private func entries(on date: Date) -> [ReadingEntry] {
-        store.entries(on: date).filter { entry in
-            guard let book = store.book(for: entry.bookID), !book.isHiddenFromCalendar else {
-                return false
-            }
-            let matchesStatus = selectedReadingStatus == .all || book.readingStatus == selectedReadingStatus
-            let matchesCategory = selectedCategory == .all || book.category == selectedCategory
-            return matchesStatus && matchesCategory
+    private func matchesCalendarFilters(_ entry: ReadingEntry) -> Bool {
+        guard let book = store.book(for: entry.bookID), !book.isHiddenFromCalendar else {
+            return false
         }
+        let matchesStatus = selectedReadingStatus == .all || book.readingStatus == selectedReadingStatus
+        let matchesCategory = selectedCategory == .all || book.category == selectedCategory
+        return matchesStatus && matchesCategory
+    }
+
+    private func entries(on date: Date) -> [ReadingEntry] {
+        store.entries(on: date).filter(matchesCalendarFilters)
     }
 
     private func books(on date: Date) -> [Book] {
@@ -47,7 +49,10 @@ struct CalendarView: View {
     }
 
     private var monthlyEntries: [ReadingEntry] {
-        store.entries.filter { Calendar.current.isDate($0.date, equalTo: displayedMonth, toGranularity: .month) }
+        store.entries.filter {
+            Calendar.current.isDate($0.date, equalTo: displayedMonth, toGranularity: .month)
+                && matchesCalendarFilters($0)
+        }
     }
 
     private var mostRecentMonthlyEntry: ReadingEntry? {
