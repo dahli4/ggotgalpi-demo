@@ -125,7 +125,7 @@ private struct CalendarDayNumberBadge: View {
             Circle()
                 .fill(
                     RadialGradient(
-                        colors: [.white.opacity(0.90), .white.opacity(0.18), .white.opacity(0)],
+                        colors: [.white.opacity(0.98), .white.opacity(0.34), .white.opacity(0)],
                         center: .center,
                         startRadius: 0.5,
                         endRadius: 9.5
