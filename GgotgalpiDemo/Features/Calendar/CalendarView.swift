@@ -46,28 +46,45 @@ struct CalendarView: View {
         .joined(separator: " · ")
     }
 
+    private var monthlyEntries: [ReadingEntry] {
+        store.entries.filter { Calendar.current.isDate($0.date, equalTo: displayedMonth, toGranularity: .month) }
+    }
+
+    private var mostRecentMonthlyEntry: ReadingEntry? {
+        monthlyEntries.max { $0.createdAt < $1.createdAt }
+    }
+
     var body: some View {
         NavigationStack {
-            VStack(alignment: .leading, spacing: GgotgalpiTheme.Spacing.section) {
-                MonthlyCalendarGrid(
-                    displayedMonth: $displayedMonth,
-                    selectedDate: $selectedDate,
-                    books: { books(on: $0) },
-                    selectDate: { date in
-                        selectedDate = date
-                        isShowingDayEntries = true
-                    },
-                    requestReorder: { date in
-                        let books = books(on: date)
-                        guard books.count > 1 else { return }
-                        reorderRequest = CalendarBookReorderRequest(date: date, books: books)
-                    }
-                )
-                .frame(maxHeight: .infinity)
-                .layoutPriority(-1)
+            ScrollView {
+                VStack(alignment: .leading, spacing: GgotgalpiTheme.Spacing.section) {
+                    MonthlyCalendarGrid(
+                        displayedMonth: $displayedMonth,
+                        selectedDate: $selectedDate,
+                        books: { books(on: $0) },
+                        selectDate: { date in
+                            selectedDate = date
+                            isShowingDayEntries = true
+                        },
+                        requestReorder: { date in
+                            let books = books(on: date)
+                            guard books.count > 1 else { return }
+                            reorderRequest = CalendarBookReorderRequest(date: date, books: books)
+                        }
+                    )
+
+                    CalendarMonthlySummary(
+                        entries: monthlyEntries,
+                        latestEntry: mostRecentMonthlyEntry,
+                        latestBook: mostRecentMonthlyEntry.flatMap { store.book(for: $0.bookID) }
+                    )
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, GgotgalpiTheme.Spacing.screen)
+                .padding(.top, GgotgalpiTheme.Spacing.control)
+                .padding(.bottom, GgotgalpiTheme.Spacing.compact)
             }
-            .padding(.horizontal, GgotgalpiTheme.Spacing.screen)
-            .padding(.bottom, GgotgalpiTheme.Spacing.compact)
+            .scrollIndicators(.hidden)
             // 달력 카드 밖은 거의 흰색의 웜 화이트로 두고, 따뜻한 베이지 톤은 월간 달력 카드에만 남깁니다.
             .background(GgotgalpiTheme.calendarCanvas)
             .toolbarBackground(GgotgalpiTheme.calendarCanvas, for: .navigationBar)
@@ -143,6 +160,75 @@ struct CalendarView: View {
     }
 }
 
+private struct CalendarMonthlySummary: View {
+    let entries: [ReadingEntry]
+    let latestEntry: ReadingEntry?
+    let latestBook: Book?
+
+    private var readBookCount: Int {
+        Set(entries.map(\.bookID)).count
+    }
+
+    private var readPageCount: Int {
+        entries.reduce(0) { $0 + max(0, $1.pageTo - $1.pageFrom + 1) }
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: GgotgalpiTheme.Spacing.control) {
+            Text("이번 달 요약")
+                .font(.system(.headline, design: .serif))
+                .foregroundStyle(GgotgalpiTheme.ink)
+
+            HStack(spacing: 0) {
+                CalendarSummaryMetric(value: "\(readBookCount)권", title: "읽은 책")
+                CalendarSummaryMetric(value: "\(entries.count)개", title: "감상 기록")
+                CalendarSummaryMetric(value: "\(readPageCount)쪽", title: "읽은 페이지")
+            }
+
+            if let latestEntry, let latestBook {
+                Divider()
+
+                VStack(alignment: .leading, spacing: 5) {
+                    Text("최근 감상 · \(latestEntry.date.shortKoreanDate)")
+                        .font(.caption.weight(.medium))
+                        .foregroundStyle(GgotgalpiTheme.secondaryInk)
+
+                    Text(latestBook.title)
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(GgotgalpiTheme.ink)
+
+                    Text(latestEntry.note)
+                        .font(.caption)
+                        .foregroundStyle(GgotgalpiTheme.secondaryInk)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                }
+            } else {
+                Text("이번 달에 남긴 감상이 아직 없어요.")
+                    .font(.subheadline)
+                    .foregroundStyle(GgotgalpiTheme.secondaryInk)
+            }
+        }
+    }
+}
+
+private struct CalendarSummaryMetric: View {
+    let value: String
+    let title: String
+
+    var body: some View {
+        VStack(spacing: 3) {
+            Text(value)
+                .font(.system(.title3, design: .serif).weight(.semibold))
+                .foregroundStyle(GgotgalpiTheme.ink)
+            Text(title)
+                .font(.caption2)
+                .foregroundStyle(GgotgalpiTheme.secondaryInk)
+        }
+        .frame(maxWidth: .infinity)
+    }
+}
+
 private struct CalendarFilterSheet: View {
     @Environment(\.dismiss) private var dismiss
     @Binding var selectedReadingStatus: ReadingStatus
@@ -160,7 +246,7 @@ private struct CalendarFilterSheet: View {
                         .font(.caption.weight(.semibold))
                         .foregroundStyle(GgotgalpiTheme.secondaryInk)
 
-                    ReadingStatusPicker(selection: $selectedReadingStatus)
+                    ReadingStatusUnderlineTabs(selection: $selectedReadingStatus)
                 }
 
                 VStack(alignment: .leading, spacing: GgotgalpiTheme.Spacing.compact) {
@@ -168,7 +254,7 @@ private struct CalendarFilterSheet: View {
                         .font(.caption.weight(.semibold))
                         .foregroundStyle(GgotgalpiTheme.secondaryInk)
 
-                    CategoryUnderlineTabs(selection: $selectedCategory)
+                    CalendarCategoryTabs(selection: $selectedCategory)
                 }
 
                 Spacer()
@@ -357,14 +443,21 @@ private struct MonthlyCalendarGrid: View {
         max(days.count / 7, 1)
     }
 
+    private var calendarHeight: CGFloat {
+        let weekdayHeight: CGFloat = 18
+        let headerHeight: CGFloat = 44
+        let cardInsets: CGFloat = 16
+        return cardInsets + headerHeight + GgotgalpiTheme.Spacing.control + weekdayHeight + CGFloat(weekCount) * 66
+    }
+
     var body: some View {
         GeometryReader { proxy in
-            // 상단 필터를 남기고도 그리드가 화면을 꽉 채우도록 월별 행 높이를 계산합니다.
+            // 화면이 큰 경우에도 달력만 과도하게 길어지지 않도록 행 높이에 상한을 둡니다.
             let weekdayHeight: CGFloat = 18
             let headerHeight: CGFloat = 44
             let calendarCardInsets: CGFloat = 16
             let contentHeight = max(0, proxy.size.height - calendarCardInsets - headerHeight - GgotgalpiTheme.Spacing.control - weekdayHeight)
-            let dayCellHeight = max(58, contentHeight / CGFloat(weekCount))
+            let dayCellHeight = min(66, max(58, contentHeight / CGFloat(weekCount)))
 
             VStack(spacing: GgotgalpiTheme.Spacing.control) {
                 HStack {
@@ -427,6 +520,7 @@ private struct MonthlyCalendarGrid: View {
             }
             .shadow(color: .black.opacity(0.045), radius: 8, y: 3)
         }
+        .frame(height: calendarHeight)
     }
 
     private var monthTitle: String {

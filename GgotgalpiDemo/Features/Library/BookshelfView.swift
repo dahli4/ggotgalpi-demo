@@ -100,6 +100,66 @@ struct ReadingStatusPicker: View {
     }
 }
 
+/// 달력 필터용 읽기 상태 탭입니다. 항목 사이의 세로선으로 선택지를 구분합니다.
+struct ReadingStatusUnderlineTabs: View {
+    @Binding var selection: ReadingStatus
+
+    var body: some View {
+        HStack(spacing: 0) {
+            ForEach(ReadingStatus.allCases) { status in
+                Button {
+                    selection = status
+                } label: {
+                    Text(status.rawValue)
+                        .font(.subheadline.weight(selection == status ? .semibold : .regular))
+                        .foregroundStyle(selection == status ? GgotgalpiTheme.ink : GgotgalpiTheme.secondaryInk)
+                        .padding(.vertical, 7)
+                    .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("읽기 상태: \(status.rawValue)")
+                .accessibilityAddTraits(selection == status ? .isSelected : [])
+
+                if status != ReadingStatus.allCases.last {
+                    Rectangle()
+                        .fill(GgotgalpiTheme.line.opacity(0.7))
+                        .frame(width: 0.7, height: 18)
+                }
+            }
+        }
+    }
+}
+
+/// 달력 필터용 장르 탭입니다. 읽기 상태 탭과 같은 세로 구분선 스타일을 사용합니다.
+struct CalendarCategoryTabs: View {
+    @Binding var selection: BookCategory
+
+    var body: some View {
+        HStack(spacing: 0) {
+            ForEach(BookCategory.allCases) { category in
+                Button {
+                    selection = category
+                } label: {
+                    Text(category.rawValue)
+                        .font(.subheadline.weight(selection == category ? .semibold : .regular))
+                        .foregroundStyle(selection == category ? GgotgalpiTheme.ink : GgotgalpiTheme.secondaryInk)
+                        .padding(.vertical, 7)
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("장르: \(category.rawValue)")
+                .accessibilityAddTraits(selection == category ? .isSelected : [])
+
+                if category != BookCategory.allCases.last {
+                    Rectangle()
+                        .fill(GgotgalpiTheme.line.opacity(0.7))
+                        .frame(width: 0.7, height: 18)
+                }
+            }
+        }
+    }
+}
+
 /// 상태 탭보다 한 단계 낮은 장르 필터입니다. 별도 회색 컨트롤 대신 가벼운 텍스트 탭으로 표현합니다.
 struct CategoryUnderlineTabs: View {
     @Binding var selection: BookCategory
