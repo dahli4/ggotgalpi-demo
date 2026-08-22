@@ -87,7 +87,7 @@ struct BookshelfView: View {
 }
 
 /// 책장 상단의 읽기 상태 탭입니다. 선택된 상태 안에서 아래 장르 탭이 다시 적용됩니다.
-private struct ReadingStatusPicker: View {
+struct ReadingStatusPicker: View {
     @Binding var selection: ReadingStatus
 
     var body: some View {

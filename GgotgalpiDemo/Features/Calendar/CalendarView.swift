@@ -4,7 +4,9 @@ struct CalendarView: View {
     @EnvironmentObject private var store: DemoStore
     @State private var selectedDate = Calendar.current.startOfDay(for: Date())
     @State private var displayedMonth = Calendar.current.startOfMonth(for: Date())
+    @State private var selectedReadingStatus: ReadingStatus = .all
     @State private var selectedCategory: BookCategory = .all
+    @State private var isShowingFilters = false
     @State private var reorderRequest: CalendarBookReorderRequest?
     @State private var isShowingDayEntries = false
     @State private var isShowingSearch = false
@@ -14,19 +16,14 @@ struct CalendarView: View {
             guard let book = store.book(for: entry.bookID), !book.isHiddenFromCalendar else {
                 return false
             }
-            return selectedCategory == .all || book.category == selectedCategory
+            let matchesStatus = selectedReadingStatus == .all || book.readingStatus == selectedReadingStatus
+            let matchesCategory = selectedCategory == .all || book.category == selectedCategory
+            return matchesStatus && matchesCategory
         }
     }
 
-    private func allCalendarEntries(on date: Date) -> [ReadingEntry] {
-        store.entries(on: date).filter { entry in
-            store.book(for: entry.bookID)?.isHiddenFromCalendar == false
-        }
-    }
-
-    private func books(on date: Date, applyingCategoryFilter: Bool) -> [Book] {
-        let sourceEntries = applyingCategoryFilter ? entries(on: date) : allCalendarEntries(on: date)
-        let latestEntries = Dictionary(grouping: sourceEntries, by: \.bookID).compactMapValues { entries in
+    private func books(on date: Date) -> [Book] {
+        let latestEntries = Dictionary(grouping: entries(on: date), by: \.bookID).compactMapValues { entries in
             entries.max { $0.createdAt < $1.createdAt }
         }
         let defaultOrder = latestEntries.values
@@ -36,22 +33,32 @@ struct CalendarView: View {
         return orderedIDs.compactMap(store.book(for:))
     }
 
+    private var hasActiveFilter: Bool {
+        selectedReadingStatus != .all || selectedCategory != .all
+    }
+
+    private var filterSummary: String {
+        [
+            selectedReadingStatus == .all ? nil : selectedReadingStatus.rawValue,
+            selectedCategory == .all ? nil : selectedCategory.rawValue
+        ]
+        .compactMap { $0 }
+        .joined(separator: " · ")
+    }
+
     var body: some View {
         NavigationStack {
             VStack(alignment: .leading, spacing: GgotgalpiTheme.Spacing.section) {
-                CategoryUnderlineTabs(selection: $selectedCategory)
-                    .layoutPriority(1)
-
                 MonthlyCalendarGrid(
                     displayedMonth: $displayedMonth,
                     selectedDate: $selectedDate,
-                    books: { books(on: $0, applyingCategoryFilter: true) },
+                    books: { books(on: $0) },
                     selectDate: { date in
                         selectedDate = date
                         isShowingDayEntries = true
                     },
                     requestReorder: { date in
-                        let books = books(on: date, applyingCategoryFilter: false)
+                        let books = books(on: date)
                         guard books.count > 1 else { return }
                         reorderRequest = CalendarBookReorderRequest(date: date, books: books)
                     }
@@ -67,12 +74,42 @@ struct CalendarView: View {
             .toolbarBackground(.visible, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        isShowingSearch = true
-                    } label: {
-                        Image(systemName: "magnifyingglass")
+                    HStack(spacing: 0) {
+                        if hasActiveFilter {
+                            Button {
+                                isShowingFilters = true
+                            } label: {
+                                Text(filterSummary)
+                                    .font(.caption.weight(.medium))
+                                    .lineLimit(1)
+                                    .padding(.horizontal, 10)
+                                    .frame(minHeight: 36)
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityLabel("적용된 필터: \(filterSummary)")
+
+                            Divider()
+                                .frame(height: 18)
+                                .padding(.horizontal, 2)
+                        }
+
+                        Button {
+                            isShowingFilters = true
+                        } label: {
+                            Image(systemName: "line.3.horizontal.decrease.circle")
+                                .frame(width: 36, height: 36)
+                        }
+                        .accessibilityLabel("달력 필터")
+
+                        Button {
+                            isShowingSearch = true
+                        } label: {
+                            Image(systemName: "magnifyingglass")
+                                .frame(width: 36, height: 36)
+                        }
+                        .accessibilityLabel("통합 검색")
                     }
-                    .accessibilityLabel("통합 검색")
+                    .foregroundStyle(GgotgalpiTheme.ink)
                 }
             }
         }
@@ -83,11 +120,18 @@ struct CalendarView: View {
                 store.saveCalendarBookOrder(bookIDs, for: request.date)
             }
         }
+        .sheet(isPresented: $isShowingFilters) {
+            CalendarFilterSheet(
+                selectedReadingStatus: $selectedReadingStatus,
+                selectedCategory: $selectedCategory
+            )
+            .presentationDetents([.medium])
+        }
         .sheet(isPresented: $isShowingDayEntries) {
             CalendarDayEntriesSheet(
                 date: selectedDate,
                 entries: entries(on: selectedDate),
-                orderedBooks: books(on: selectedDate, applyingCategoryFilter: false),
+                orderedBooks: books(on: selectedDate),
                 saveOrder: { bookIDs in
                     store.saveCalendarBookOrder(bookIDs, for: selectedDate)
                 }
@@ -96,6 +140,57 @@ struct CalendarView: View {
         .sheet(isPresented: $isShowingSearch) {
             UnifiedSearchView()
         }
+    }
+}
+
+private struct CalendarFilterSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    @Binding var selectedReadingStatus: ReadingStatus
+    @Binding var selectedCategory: BookCategory
+
+    var body: some View {
+        NavigationStack {
+            VStack(alignment: .leading, spacing: GgotgalpiTheme.Spacing.section) {
+                Text("달력에 표시할 감상을 골라 보세요.")
+                    .font(.subheadline)
+                    .foregroundStyle(GgotgalpiTheme.secondaryInk)
+
+                VStack(alignment: .leading, spacing: GgotgalpiTheme.Spacing.compact) {
+                    Text("읽은 상태")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(GgotgalpiTheme.secondaryInk)
+
+                    ReadingStatusPicker(selection: $selectedReadingStatus)
+                }
+
+                VStack(alignment: .leading, spacing: GgotgalpiTheme.Spacing.compact) {
+                    Text("장르")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(GgotgalpiTheme.secondaryInk)
+
+                    CategoryUnderlineTabs(selection: $selectedCategory)
+                }
+
+                Spacer()
+            }
+            .padding(.horizontal, GgotgalpiTheme.Spacing.screen)
+            .padding(.top, GgotgalpiTheme.Spacing.content)
+            .navigationTitle("필터")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("초기화") {
+                        selectedReadingStatus = .all
+                        selectedCategory = .all
+                    }
+                }
+
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("완료") { dismiss() }
+                }
+            }
+        }
+        .paperBackground()
     }
 }
 
