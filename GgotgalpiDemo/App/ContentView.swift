@@ -13,40 +13,50 @@ struct ContentView: View {
     private let completionRatio: CGFloat = 0.30
 
     var body: some View {
-        GeometryReader { proxy in
-            let pageWidth = proxy.size.width
+        ZStack {
+            screenBackground
+                .ignoresSafeArea()
 
-            ZStack {
-                CalendarView()
-                    .frame(width: proxy.size.width, height: proxy.size.height)
-                    .offset(x: calendarOffset(pageWidth: pageWidth))
+            GeometryReader { proxy in
+                let pageWidth = proxy.size.width
 
-                BookshelfView()
-                    .frame(width: proxy.size.width, height: proxy.size.height)
-                    .offset(x: bookshelfOffset(pageWidth: pageWidth))
-            }
-            .clipped()
-            .overlay(alignment: selectedTab == .calendar ? .trailing : .leading) {
-                Color.clear
-                    .frame(width: edgeActivationWidth)
-                    .frame(maxHeight: .infinity)
-                    .contentShape(Rectangle())
-                    .gesture(
-                        DragGesture(minimumDistance: 8)
-                            .onChanged { value in
-                                updateInteractiveSwipe(value, pageWidth: pageWidth)
-                            }
-                            .onEnded { value in
-                                finishInteractiveSwipe(value, pageWidth: pageWidth)
-                            }
-                    )
+                ZStack {
+                    CalendarView()
+                        .frame(width: proxy.size.width, height: proxy.size.height)
+                        .offset(x: calendarOffset(pageWidth: pageWidth))
+
+                    BookshelfView()
+                        .frame(width: proxy.size.width, height: proxy.size.height)
+                        .offset(x: bookshelfOffset(pageWidth: pageWidth))
+                }
+                .clipped()
+                .overlay(alignment: selectedTab == .calendar ? .trailing : .leading) {
+                    Color.clear
+                        .frame(width: edgeActivationWidth)
+                        .frame(maxHeight: .infinity)
+                        .contentShape(Rectangle())
+                        .gesture(
+                            DragGesture(minimumDistance: 8)
+                                .onChanged { value in
+                                    updateInteractiveSwipe(value, pageWidth: pageWidth)
+                                }
+                                .onEnded { value in
+                                    finishInteractiveSwipe(value, pageWidth: pageWidth)
+                                }
+                        )
+                }
             }
         }
-        .safeAreaInset(edge: .bottom, spacing: 0) {
+        .ignoresSafeArea()
+        .overlay(alignment: .bottom) {
             tabDock
         }
         .tint(GgotgalpiTheme.accent)
         .ignoresSafeArea(.keyboard)
+    }
+
+    private var screenBackground: Color {
+        GgotgalpiTheme.paper
     }
 
     /// 화면 가장자리의 전용 영역에서 시작한 명확한 가로 드래그에만 반응해, 세로 스크롤과 충돌하지 않게 합니다.
@@ -109,7 +119,7 @@ struct ContentView: View {
         }
         .padding(4)
         .background(.ultraThinMaterial, in: Capsule())
-        // 홈 인디케이터 위·아래의 여백이 같은 밀도로 보이도록 안전 영역 안에서만 조금 내립니다.
+        // 전체 화면 위에 떠 있으면서 홈 인디케이터 바로 위에 붙도록 안전 영역 안에서만 내립니다.
         .padding(.bottom, -8)
     }
 

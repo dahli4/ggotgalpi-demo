@@ -90,9 +90,9 @@ struct CalendarView: View {
                 .padding(.bottom, GgotgalpiTheme.Spacing.compact)
             }
             .scrollIndicators(.hidden)
-            // 달력 카드 밖은 거의 흰색의 웜 화이트로 두고, 따뜻한 베이지 톤은 월간 달력 카드에만 남깁니다.
-            .background(GgotgalpiTheme.calendarCanvas)
-            .toolbarBackground(GgotgalpiTheme.calendarCanvas, for: .navigationBar)
+            // 달력 카드와 안전 영역을 같은 웜 베이지로 이어 화면 전체가 한 장처럼 보이게 합니다.
+            .background(GgotgalpiTheme.paper)
+            .toolbarBackground(GgotgalpiTheme.paper, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
@@ -135,7 +135,7 @@ struct CalendarView: View {
                 }
             }
         }
-        .background(GgotgalpiTheme.calendarCanvas.ignoresSafeArea())
+        .background(GgotgalpiTheme.paper.ignoresSafeArea())
         .tint(GgotgalpiTheme.accent)
         .sheet(item: $reorderRequest) { request in
             CalendarBookOrderEditor(date: request.date, books: request.books) { bookIDs in
