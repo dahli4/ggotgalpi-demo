@@ -86,53 +86,17 @@ struct CalendarView: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal, GgotgalpiTheme.Spacing.screen)
-                .padding(.top, GgotgalpiTheme.Spacing.control)
+                // 기존 내비게이션 바가 차지하던 높이를 유지해 상단 액션과 달력이 겹치지 않게 합니다.
+                .padding(.top, GgotgalpiTheme.Spacing.control + GgotgalpiTheme.Spacing.largeSection + GgotgalpiTheme.Spacing.content + GgotgalpiTheme.Spacing.compact)
                 .padding(.bottom, GgotgalpiTheme.Spacing.compact)
             }
             .scrollIndicators(.hidden)
             // 달력 카드와 안전 영역을 같은 웜 베이지로 이어 화면 전체가 한 장처럼 보이게 합니다.
             .background(GgotgalpiTheme.paper)
-            .toolbarBackground(GgotgalpiTheme.paper, for: .navigationBar)
-            .toolbarBackground(.visible, for: .navigationBar)
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    HStack(spacing: 0) {
-                        if hasActiveFilter {
-                            Button {
-                                isShowingFilters = true
-                            } label: {
-                                Text(filterSummary)
-                                    .font(.caption.weight(.medium))
-                                    .lineLimit(1)
-                                    .padding(.horizontal, 10)
-                                    .frame(minHeight: 36)
-                            }
-                            .buttonStyle(.plain)
-                            .accessibilityLabel("적용된 필터: \(filterSummary)")
-
-                            Divider()
-                                .frame(height: 18)
-                                .padding(.horizontal, 2)
-                        }
-
-                        Button {
-                            isShowingFilters = true
-                        } label: {
-                            Image(systemName: "line.3.horizontal.decrease.circle")
-                                .frame(width: 36, height: 36)
-                        }
-                        .accessibilityLabel("달력 필터")
-
-                        Button {
-                            isShowingSearch = true
-                        } label: {
-                            Image(systemName: "magnifyingglass")
-                                .frame(width: 36, height: 36)
-                        }
-                        .accessibilityLabel("통합 검색")
-                    }
-                    .foregroundStyle(GgotgalpiTheme.ink)
-                }
+            .overlay(alignment: .topTrailing) {
+                calendarActions
+                    .padding(.top, 0)
+                    .padding(.trailing, GgotgalpiTheme.Spacing.screen)
             }
         }
         .background(GgotgalpiTheme.paper.ignoresSafeArea())
@@ -162,6 +126,46 @@ struct CalendarView: View {
         .sheet(isPresented: $isShowingSearch) {
             UnifiedSearchView()
         }
+    }
+
+    private var calendarActions: some View {
+        HStack(spacing: GgotgalpiTheme.Spacing.compact) {
+            if hasActiveFilter {
+                Button {
+                    isShowingFilters = true
+                } label: {
+                    Text(filterSummary)
+                        .font(.caption.weight(.medium))
+                        .lineLimit(1)
+                        // 아이콘 버튼의 내부 여백과 맞춰, 선택된 필터도 캡슐 안에서 균형 있게 보이게 합니다.
+                        .padding(.leading, GgotgalpiTheme.Spacing.control)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("적용된 필터: \(filterSummary)")
+            }
+
+            Button {
+                isShowingFilters = true
+            } label: {
+                Image(systemName: "line.3.horizontal.decrease.circle")
+                    .font(.body)
+                    .frame(width: 40, height: 40)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("달력 필터")
+
+            Button {
+                isShowingSearch = true
+            } label: {
+                Image(systemName: "magnifyingglass")
+                    .font(.body)
+                    .frame(width: 40, height: 40)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("통합 검색")
+        }
+        .foregroundStyle(GgotgalpiTheme.ink)
+        .background(Color.white.opacity(0.82), in: Capsule())
     }
 }
 
