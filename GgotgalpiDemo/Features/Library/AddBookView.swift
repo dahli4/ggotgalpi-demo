@@ -50,12 +50,13 @@ struct AddReadingEntryView: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var store: DemoStore
     let book: Book
+    let editingEntry: ReadingEntry?
     @State private var date = Date()
     @State private var pageFrom = ""
     @State private var pageTo = ""
     @State private var note = ""
     @State private var readingRound = 1
-    @State private var hasAppliedSuggestedStartPage = false
+    @State private var hasInitializedValues = false
 
     private var mostRecentPage: Int? {
         store.entries(for: book.id)
@@ -91,22 +92,33 @@ struct AddReadingEntryView: View {
             }
             .scrollContentBackground(.hidden)
             .background(GgotgalpiTheme.paper)
-            .navigationTitle("감상 기록")
+            .navigationTitle(editingEntry == nil ? "감상 기록" : "감상 기록 수정")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("취소") { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("기록") {
-                        store.addEntry(
-                            bookID: book.id,
-                            date: date,
-                            pageFrom: Int(pageFrom) ?? 0,
-                            pageTo: Int(pageTo) ?? 0,
-                            note: note.isEmpty ? "새로운 감상을 기록했어요." : note,
-                            readingRound: readingRound
-                        )
+                    Button(editingEntry == nil ? "기록" : "저장") {
+                        if let editingEntry {
+                            store.updateEntry(
+                                id: editingEntry.id,
+                                date: date,
+                                pageFrom: Int(pageFrom) ?? 0,
+                                pageTo: Int(pageTo) ?? 0,
+                                note: note.isEmpty ? "새로운 감상을 기록했어요." : note,
+                                readingRound: readingRound
+                            )
+                        } else {
+                            store.addEntry(
+                                bookID: book.id,
+                                date: date,
+                                pageFrom: Int(pageFrom) ?? 0,
+                                pageTo: Int(pageTo) ?? 0,
+                                note: note.isEmpty ? "새로운 감상을 기록했어요." : note,
+                                readingRound: readingRound
+                            )
+                        }
                         dismiss()
                     }
                 }
@@ -116,14 +128,19 @@ struct AddReadingEntryView: View {
         .paperBackground()
         .onAppear {
             guard
-                !hasAppliedSuggestedStartPage,
-                book.readingStatus == .reading,
-                pageFrom.isEmpty,
-                let mostRecentPage
+                !hasInitializedValues
             else { return }
 
-            pageFrom = String(mostRecentPage)
-            hasAppliedSuggestedStartPage = true
+            hasInitializedValues = true
+            if let editingEntry {
+                date = editingEntry.date
+                pageFrom = String(editingEntry.pageFrom)
+                pageTo = String(editingEntry.pageTo)
+                note = editingEntry.note
+                readingRound = editingEntry.readingRound
+            } else if book.readingStatus == .reading, let mostRecentPage {
+                pageFrom = String(mostRecentPage)
+            }
         }
     }
 }

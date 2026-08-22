@@ -5,6 +5,7 @@ struct BookDetailView: View {
     @EnvironmentObject private var store: DemoStore
     let book: Book
     @State private var showingAddEntry = false
+    @State private var editingEntry: ReadingEntry?
 
     private var bookEntries: [ReadingEntry] {
         store.entries(for: book.id)
@@ -61,7 +62,13 @@ struct BookDetailView: View {
                             .foregroundStyle(GgotgalpiTheme.secondaryInk)
                     } else {
                         ForEach(bookEntries) { entry in
-                            ReadingEntryRow(entry: entry)
+                            Button {
+                                editingEntry = entry
+                            } label: {
+                                ReadingEntryRow(entry: entry)
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityHint("감상 기록 수정")
                             if entry.id != bookEntries.last?.id { DividerLine() }
                         }
                     }
@@ -78,7 +85,10 @@ struct BookDetailView: View {
                 }
             }
             .sheet(isPresented: $showingAddEntry) {
-                AddReadingEntryView(book: book)
+                AddReadingEntryView(book: book, editingEntry: nil)
+            }
+            .sheet(item: $editingEntry) { entry in
+                AddReadingEntryView(book: book, editingEntry: entry)
             }
         }
         .paperBackground()
@@ -122,5 +132,6 @@ struct ReadingEntryRow: View {
                 .lineSpacing(3)
         }
         .padding(.vertical, 3)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }

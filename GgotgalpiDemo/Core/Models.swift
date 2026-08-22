@@ -156,6 +156,15 @@ final class DemoStore: ObservableObject {
         entries.append(ReadingEntry(bookID: bookID, date: date, pageFrom: pageFrom, pageTo: pageTo, note: note, readingRound: readingRound))
     }
 
+    func updateEntry(id: UUID, date: Date, pageFrom: Int, pageTo: Int, note: String, readingRound: Int) {
+        guard let index = entries.firstIndex(where: { $0.id == id }) else { return }
+        entries[index].date = date
+        entries[index].pageFrom = pageFrom
+        entries[index].pageTo = pageTo
+        entries[index].note = note
+        entries[index].readingRound = readingRound
+    }
+
     /// 사용자가 정한 순서를 먼저 유지하고, 새로 생긴 작품은 그 뒤에 덧붙입니다.
     func orderedBookIDs(for date: Date, defaultOrder: [UUID]) -> [UUID] {
         let dateKey = calendarDateKey(for: date)
