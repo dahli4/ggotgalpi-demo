@@ -86,12 +86,12 @@ struct ContentView: View {
 
         guard isInteractiveSwipe else { return }
 
-        let shouldComplete = abs(interactiveOffset) >= pageWidth * completionRatio
-        withAnimation(.easeOut(duration: 0.24)) {
-            if shouldComplete {
-                selectedTab = interactiveOffset < 0 ? .bookshelf : .calendar
+        if abs(interactiveOffset) >= pageWidth * completionRatio {
+            activateTab(interactiveOffset < 0 ? .bookshelf : .calendar)
+        } else {
+            withAnimation(.easeOut(duration: 0.24)) {
+                interactiveOffset = 0
             }
-            interactiveOffset = 0
         }
     }
 
@@ -113,34 +113,56 @@ struct ContentView: View {
     }
 
     private var tabDock: some View {
-        HStack(spacing: 2) {
-            tabButton(tab: .calendar, title: "달력", symbol: "calendar")
-            tabButton(tab: .bookshelf, title: "책장", symbol: "books.vertical")
-        }
-        .padding(4)
-        .background(.ultraThinMaterial, in: Capsule())
-        // 전체 화면 위에 떠 있으면서 홈 인디케이터 바로 위에 붙도록 안전 영역 안에서만 내립니다.
-        .padding(.bottom, -8)
+        tabDockSurface
+            // 전체 화면 위에 떠 있으면서 홈 인디케이터 바로 위에 붙도록 안전 영역 안에서만 내립니다.
+            .padding(.bottom, -8)
     }
 
-    private func tabButton(tab: Tab, title: String, symbol: String) -> some View {
-        Button {
-            withAnimation(.easeInOut(duration: 0.20)) {
-                selectedTab = tab
-                interactiveOffset = 0
+    private var tabDockSurface: some View {
+        tabDockContents
+    }
+
+    private var tabDockContents: some View {
+        ZStack {
+            Picker("화면 전환", selection: tabSelection) {
+                Text(" ").tag(Tab.calendar)
+                Text(" ").tag(Tab.bookshelf)
             }
-        } label: {
-            VStack(spacing: 2) {
-                Image(systemName: symbol)
-                    .font(.body.weight(.semibold))
-                Text(title)
-                    .font(.caption2.weight(.medium))
+            .pickerStyle(.segmented)
+            .labelsHidden()
+
+            HStack(spacing: 0) {
+                tabPickerLabel(title: "달력", symbol: "calendar", isSelected: selectedTab == .calendar)
+                tabPickerLabel(title: "책장", symbol: "books.vertical", isSelected: selectedTab == .bookshelf)
             }
-            .foregroundStyle(selectedTab == tab ? GgotgalpiTheme.ink : GgotgalpiTheme.secondaryInk)
-            .frame(width: 72, height: 44)
-            .background(selectedTab == tab ? Color.white.opacity(0.60) : .clear, in: Capsule())
+            .allowsHitTesting(false)
         }
-        .buttonStyle(.plain)
-        .accessibilityAddTraits(selectedTab == tab ? .isSelected : [])
+        .frame(width: 152, height: 44)
+    }
+
+    private var tabSelection: Binding<Tab> {
+        Binding(
+            get: { selectedTab },
+            set: { activateTab($0) }
+        )
+    }
+
+    private func tabPickerLabel(title: String, symbol: String, isSelected: Bool) -> some View {
+        VStack(spacing: 2) {
+            Image(systemName: symbol)
+                .font(.body.weight(.semibold))
+            Text(title)
+                .font(.caption2.weight(.medium))
+        }
+        .foregroundStyle(isSelected ? GgotgalpiTheme.ink : GgotgalpiTheme.secondaryInk)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    /// 책장 상단의 세그먼트와 같은 시스템 선택 전환을 사용합니다.
+    private func activateTab(_ tab: Tab) {
+        guard selectedTab != tab else { return }
+
+        selectedTab = tab
+        interactiveOffset = 0
     }
 }
