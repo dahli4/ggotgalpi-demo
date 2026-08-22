@@ -10,11 +10,22 @@ enum BookCategory: String, CaseIterable, Identifiable {
     var id: String { rawValue }
 }
 
+/// 책장의 첫 번째 분류 기준입니다. 상태를 먼저 고르고, 그 안에서 장르를 다시 고릅니다.
+enum ReadingStatus: String, CaseIterable, Identifiable {
+    case all = "모두"
+    case wantToRead = "보고 싶은"
+    case finished = "읽은"
+    case reading = "읽고 있는"
+
+    var id: String { rawValue }
+}
+
 struct Book: Identifiable, Hashable {
     let id: UUID
     var title: String
     var author: String
     var category: BookCategory
+    var readingStatus: ReadingStatus
     var coverColor: Color
     var isHiddenFromCalendar: Bool
 
@@ -23,6 +34,7 @@ struct Book: Identifiable, Hashable {
         title: String,
         author: String,
         category: BookCategory,
+        readingStatus: ReadingStatus = .wantToRead,
         coverColor: Color,
         isHiddenFromCalendar: Bool = false
     ) {
@@ -30,6 +42,7 @@ struct Book: Identifiable, Hashable {
         self.title = title
         self.author = author
         self.category = category
+        self.readingStatus = readingStatus
         self.coverColor = coverColor
         self.isHiddenFromCalendar = isHiddenFromCalendar
     }
@@ -81,6 +94,7 @@ final class DemoStore: ObservableObject {
             title: "어린 왕자",
             author: "앙투안 드 생텍쥐페리",
             category: .literature,
+            readingStatus: .reading,
             coverColor: Color(red: 0.55, green: 0.65, blue: 0.61)
         )
         let quietReading = Book(
@@ -88,6 +102,7 @@ final class DemoStore: ObservableObject {
             title: "아주 작은 습관",
             author: "제임스 클리어",
             category: .nonfiction,
+            readingStatus: .finished,
             coverColor: Color(red: 0.66, green: 0.56, blue: 0.45)
         )
         let notes = Book(
@@ -95,6 +110,7 @@ final class DemoStore: ObservableObject {
             title: "생각의 지도",
             author: "리처드 니스벳",
             category: .study,
+            readingStatus: .wantToRead,
             coverColor: Color(red: 0.42, green: 0.48, blue: 0.58),
             isHiddenFromCalendar: true
         )

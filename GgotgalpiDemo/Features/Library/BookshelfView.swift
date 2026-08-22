@@ -2,20 +2,26 @@ import SwiftUI
 
 struct BookshelfView: View {
     @EnvironmentObject private var store: DemoStore
+    @State private var selectedReadingStatus: ReadingStatus = .all
     @State private var selectedCategory: BookCategory = .all
     @State private var showingAddBook = false
     @State private var selectedBook: Book?
+    @State private var isShowingSearch = false
 
     private var visibleBooks: [Book] {
-        guard selectedCategory != .all else { return store.books }
-        return store.books.filter { $0.category == selectedCategory }
+        store.books.filter { book in
+            let matchesStatus = selectedReadingStatus == .all || book.readingStatus == selectedReadingStatus
+            let matchesCategory = selectedCategory == .all || book.category == selectedCategory
+            return matchesStatus && matchesCategory
+        }
     }
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: GgotgalpiTheme.Spacing.section) {
-                    CategoryPicker(selection: $selectedCategory)
+                    ReadingStatusPicker(selection: $selectedReadingStatus)
+                    CategoryUnderlineTabs(selection: $selectedCategory)
                     SectionLabel(title: "나의 책장")
 
                     LazyVStack(spacing: 0) {
@@ -37,9 +43,16 @@ struct BookshelfView: View {
                 .padding(.vertical, GgotgalpiTheme.Spacing.content)
             }
             .scrollIndicators(.hidden)
-            .navigationTitle("책장")
             .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
+                ToolbarItemGroup(placement: .topBarTrailing) {
+                    Button {
+                        isShowingSearch = true
+                    } label: {
+                        Image(systemName: "magnifyingglass")
+                            .foregroundStyle(GgotgalpiTheme.ink)
+                    }
+                    .accessibilityLabel("통합 검색")
+
                     Button { showingAddBook = true } label: {
                         Image(systemName: "plus")
                             .foregroundStyle(GgotgalpiTheme.ink)
@@ -52,9 +65,61 @@ struct BookshelfView: View {
             .sheet(item: $selectedBook) { book in
                 BookDetailView(book: book)
             }
+            .sheet(isPresented: $isShowingSearch) {
+                UnifiedSearchView()
+            }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .paperBackground()
+    }
+}
+
+/// 책장 상단의 읽기 상태 탭입니다. 선택된 상태 안에서 아래 장르 탭이 다시 적용됩니다.
+private struct ReadingStatusPicker: View {
+    @Binding var selection: ReadingStatus
+
+    var body: some View {
+        Picker("읽기 상태", selection: $selection) {
+            ForEach(ReadingStatus.allCases) { status in
+                Text(status.rawValue).tag(status)
+            }
+        }
+        .pickerStyle(.segmented)
+    }
+}
+
+/// 상태 탭보다 한 단계 낮은 장르 필터입니다. 별도 회색 컨트롤 대신 가벼운 텍스트 탭으로 표현합니다.
+struct CategoryUnderlineTabs: View {
+    @Binding var selection: BookCategory
+
+    var body: some View {
+        HStack(spacing: 0) {
+            ForEach(BookCategory.allCases) { category in
+                Button {
+                    selection = category
+                } label: {
+                    VStack(spacing: 7) {
+                        Text(category.rawValue)
+                            .font(.subheadline.weight(selection == category ? .semibold : .regular))
+                            .foregroundStyle(selection == category ? GgotgalpiTheme.ink : GgotgalpiTheme.secondaryInk)
+
+                        Capsule()
+                            .fill(selection == category ? GgotgalpiTheme.accent : .clear)
+                            .frame(height: 2)
+                    }
+                    .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("장르: \(category.rawValue)")
+                .accessibilityAddTraits(selection == category ? .isSelected : [])
+            }
+        }
+        .padding(.top, 2)
+        .overlay(alignment: .bottom) {
+            Rectangle()
+                .fill(GgotgalpiTheme.line.opacity(0.55))
+                .frame(height: 0.6)
+        }
     }
 }
 

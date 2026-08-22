@@ -4,6 +4,8 @@ enum GgotgalpiTheme {
     // #F8F2E8에 가까운 따뜻한 화이트: 흰색의 인상을 지키되 베이지 기운을 분명히 남깁니다.
     static let paper = Color(red: 0.973, green: 0.949, blue: 0.910)
     static let paperDeep = Color(red: 0.949, green: 0.922, blue: 0.867)
+    // 달력 카드 바깥에만 쓰는 거의 흰색의 웜 화이트입니다.
+    static let calendarCanvas = Color(red: 0.992, green: 0.988, blue: 0.976)
     static let ink = Color(red: 0.18, green: 0.18, blue: 0.17)
     static let secondaryInk = Color(red: 0.43, green: 0.41, blue: 0.37)
     static let line = Color(red: 0.84, green: 0.82, blue: 0.77)

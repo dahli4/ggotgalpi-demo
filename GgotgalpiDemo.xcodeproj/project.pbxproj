@@ -17,6 +17,7 @@
 		A10000010000000000000008 /* CalendarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000009 /* CalendarView.swift */; };
 		A10000010000000000000009 /* MyRecordView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000010 /* MyRecordView.swift */; };
 		A10000010000000000000010 /* CalendarBookCoverStack.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000011 /* CalendarBookCoverStack.swift */; };
+		A10000010000000000000011 /* UnifiedSearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000012 /* UnifiedSearchView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -31,6 +32,7 @@
 		A20000010000000000000009 /* CalendarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarView.swift; sourceTree = "<group>"; };
 		A20000010000000000000010 /* MyRecordView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyRecordView.swift; sourceTree = "<group>"; };
 		A20000010000000000000011 /* CalendarBookCoverStack.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarBookCoverStack.swift; sourceTree = "<group>"; };
+		A20000010000000000000012 /* UnifiedSearchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnifiedSearchView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -84,6 +86,7 @@
 			children = (
 				A20000010000000000000003 /* Models.swift */,
 				A20000010000000000000004 /* Theme.swift */,
+				A20000010000000000000012 /* UnifiedSearchView.swift */,
 			);
 			path = Core;
 			sourceTree = "<group>";
@@ -198,6 +201,7 @@
 				A10000010000000000000008 /* CalendarView.swift in Sources */,
 				A10000010000000000000009 /* MyRecordView.swift in Sources */,
 				A10000010000000000000010 /* CalendarBookCoverStack.swift in Sources */,
+				A10000010000000000000011 /* UnifiedSearchView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

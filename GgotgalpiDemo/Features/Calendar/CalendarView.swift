@@ -7,6 +7,7 @@ struct CalendarView: View {
     @State private var selectedCategory: BookCategory = .all
     @State private var reorderRequest: CalendarBookReorderRequest?
     @State private var isShowingDayEntries = false
+    @State private var isShowingSearch = false
 
     private func entries(on date: Date) -> [ReadingEntry] {
         store.entries(on: date).filter { entry in
@@ -38,8 +39,7 @@ struct CalendarView: View {
     var body: some View {
         NavigationStack {
             VStack(alignment: .leading, spacing: GgotgalpiTheme.Spacing.section) {
-                CategoryPicker(selection: $selectedCategory)
-                    .frame(minHeight: 32)
+                CategoryUnderlineTabs(selection: $selectedCategory)
                     .layoutPriority(1)
 
                 MonthlyCalendarGrid(
@@ -61,12 +61,19 @@ struct CalendarView: View {
             }
             .padding(.horizontal, GgotgalpiTheme.Spacing.screen)
             .padding(.bottom, GgotgalpiTheme.Spacing.compact)
-            .background(GgotgalpiTheme.paper)
-            .navigationTitle("캘린더")
-            .toolbarBackground(GgotgalpiTheme.paper, for: .navigationBar)
+            // 달력 카드 밖은 거의 흰색의 웜 화이트로 두고, 따뜻한 베이지 톤은 월간 달력 카드에만 남깁니다.
+            .background(GgotgalpiTheme.calendarCanvas)
+            .toolbarBackground(GgotgalpiTheme.calendarCanvas, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
             .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
+                ToolbarItemGroup(placement: .topBarTrailing) {
+                    Button {
+                        isShowingSearch = true
+                    } label: {
+                        Image(systemName: "magnifyingglass")
+                    }
+                    .accessibilityLabel("통합 검색")
+
                     Button("오늘") {
                         selectedDate = Calendar.current.startOfDay(for: Date())
                     }
@@ -74,7 +81,8 @@ struct CalendarView: View {
                 }
             }
         }
-        .paperBackground()
+        .background(GgotgalpiTheme.calendarCanvas.ignoresSafeArea())
+        .tint(GgotgalpiTheme.accent)
         .sheet(item: $reorderRequest) { request in
             CalendarBookOrderEditor(date: request.date, books: request.books) { bookIDs in
                 store.saveCalendarBookOrder(bookIDs, for: request.date)
@@ -89,6 +97,9 @@ struct CalendarView: View {
                     store.saveCalendarBookOrder(bookIDs, for: selectedDate)
                 }
             )
+        }
+        .sheet(isPresented: $isShowingSearch) {
+            UnifiedSearchView()
         }
     }
 }
@@ -324,7 +335,7 @@ private struct MonthlyCalendarGrid: View {
                 RoundedRectangle(cornerRadius: 14, style: .continuous)
                     .stroke(GgotgalpiTheme.paperDeep.opacity(0.75), lineWidth: 0.8)
             }
-            .shadow(color: .black.opacity(0.07), radius: 12, y: 5)
+            .shadow(color: .black.opacity(0.045), radius: 8, y: 3)
         }
     }
 
