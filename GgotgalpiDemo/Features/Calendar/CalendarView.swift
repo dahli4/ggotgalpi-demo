@@ -66,18 +66,13 @@ struct CalendarView: View {
             .toolbarBackground(GgotgalpiTheme.calendarCanvas, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
             .toolbar {
-                ToolbarItemGroup(placement: .topBarTrailing) {
+                ToolbarItem(placement: .topBarTrailing) {
                     Button {
                         isShowingSearch = true
                     } label: {
                         Image(systemName: "magnifyingglass")
                     }
                     .accessibilityLabel("통합 검색")
-
-                    Button("오늘") {
-                        selectedDate = Calendar.current.startOfDay(for: Date())
-                    }
-                    .accessibilityHint("오늘 날짜로 이동합니다")
                 }
             }
         }

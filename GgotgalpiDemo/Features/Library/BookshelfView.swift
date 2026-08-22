@@ -44,7 +44,7 @@ struct BookshelfView: View {
             }
             .scrollIndicators(.hidden)
             .toolbar {
-                ToolbarItemGroup(placement: .topBarTrailing) {
+                ToolbarItem(placement: .topBarTrailing) {
                     Button {
                         isShowingSearch = true
                     } label: {
@@ -52,11 +52,6 @@ struct BookshelfView: View {
                             .foregroundStyle(GgotgalpiTheme.ink)
                     }
                     .accessibilityLabel("통합 검색")
-
-                    Button { showingAddBook = true } label: {
-                        Image(systemName: "plus")
-                            .foregroundStyle(GgotgalpiTheme.ink)
-                    }
                 }
             }
             .sheet(isPresented: $showingAddBook) {
@@ -67,6 +62,23 @@ struct BookshelfView: View {
             }
             .sheet(isPresented: $isShowingSearch) {
                 UnifiedSearchView()
+            }
+            .overlay(alignment: .bottomTrailing) {
+                Button {
+                    showingAddBook = true
+                } label: {
+                    Image(systemName: "plus")
+                        .font(.title3.weight(.semibold))
+                        .foregroundStyle(GgotgalpiTheme.paper)
+                        .frame(width: 52, height: 52)
+                        .background(GgotgalpiTheme.accent)
+                        .clipShape(Circle())
+                        .shadow(color: .black.opacity(0.14), radius: 8, y: 4)
+                }
+                .accessibilityLabel("새 책 등록")
+                // 하단 독의 오른쪽 빈 영역 바로 위에 떠 있도록 여백을 둡니다.
+                .padding(.trailing, GgotgalpiTheme.Spacing.screen)
+                .padding(.bottom, 76)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
