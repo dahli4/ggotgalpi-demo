@@ -38,6 +38,11 @@ struct CalendarBookCoverStack: View {
                     // 첫 작품이 마지막에 그려져 항상 최전면에 남습니다.
                     ForEach(Array(visibleBooks.enumerated()).reversed(), id: \.element.id) { index, book in
                         CalendarBookCover(book: book, size: layout.coverSize)
+                            .overlay {
+                                if index == 0 {
+                                    CalendarCoverDayNumber(date: date, isSelected: isSelected)
+                                }
+                            }
                             .offset(
                                 x: CGFloat(index) * layout.horizontalOffset,
                                 y: CGFloat(index) * layout.verticalOffset
@@ -46,7 +51,6 @@ struct CalendarBookCoverStack: View {
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
 
-                calendarDayNumber
             }
         }
     }
@@ -69,14 +73,6 @@ struct CalendarBookCoverStack: View {
         )
     }
 
-    private var calendarDayNumber: some View {
-        Text(date.formatted(.dateTime.day()))
-            .font(.subheadline.weight(isSelected ? .bold : .medium))
-            .foregroundStyle(GgotgalpiTheme.ink)
-            .padding(.leading, 6)
-            .padding(.top, 5)
-    }
-
     private var accessibilityDescription: String {
         let titles = books.map(\.title).joined(separator: ", ")
         return "\(date.shortKoreanDate), 감상 \(books.count)권: \(titles)"
@@ -97,15 +93,51 @@ private struct CalendarSingleBookCover: View {
 
             ZStack(alignment: .topLeading) {
                 CalendarBookCover(book: book, size: coverSize)
+                    .overlay {
+                        CalendarCoverDayNumber(date: date, isSelected: isSelected)
+                    }
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
-
-                Text(date.formatted(.dateTime.day()))
-                    .font(.subheadline.weight(isSelected ? .bold : .medium))
-                    .foregroundStyle(GgotgalpiTheme.ink)
-                    .padding(.leading, 6)
-                    .padding(.top, 5)
             }
         }
+    }
+}
+
+/// 표지를 가로 2등분·세로 3등분했을 때 좌상단 칸의 중심에 날짜를 둡니다.
+private struct CalendarCoverDayNumber: View {
+    let date: Date
+    let isSelected: Bool
+
+    var body: some View {
+        GeometryReader { proxy in
+            CalendarDayNumberBadge(date: date, isSelected: isSelected)
+                .position(x: proxy.size.width * 0.25, y: proxy.size.height / 6)
+        }
+    }
+}
+
+/// 표지 위 날짜가 묻히지 않도록, 외곽이 자연스럽게 사라지는 흰 원 배지로 표시합니다.
+private struct CalendarDayNumberBadge: View {
+    let date: Date
+    let isSelected: Bool
+
+    var body: some View {
+        ZStack {
+            Circle()
+                .fill(
+                    RadialGradient(
+                        colors: [.white.opacity(0.90), .white.opacity(0.18), .white.opacity(0)],
+                        center: .center,
+                        startRadius: 0.5,
+                        endRadius: 9.5
+                    )
+                )
+                .frame(width: 19, height: 19)
+
+            Text(date.formatted(.dateTime.day()))
+                .font(.system(size: 8, weight: isSelected ? .bold : .medium))
+                .foregroundStyle(.black.opacity(0.82))
+        }
+        .frame(width: 19, height: 19)
     }
 }
 
