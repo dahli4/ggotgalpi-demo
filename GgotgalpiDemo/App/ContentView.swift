@@ -123,16 +123,18 @@ struct ContentView: View {
     private var tabDockSurface: some View {
         if #available(iOS 26.0, *) {
             ZStack(alignment: .leading) {
+                // 독 표면은 선택 인디케이터와 별도의 글라스 합성 그룹으로 유지합니다.
                 GlassEffectContainer(spacing: 0) {
-                    ZStack(alignment: .leading) {
-                        Capsule()
-                            .fill(.clear)
-                            .glassEffect(.clear.interactive(), in: Capsule())
-                            .allowsHitTesting(false)
+                    Capsule()
+                        .fill(.clear)
+                        .glassEffect(.clear, in: Capsule())
+                        .frame(width: 152, height: 44)
+                        .allowsHitTesting(false)
+                }
 
-                        dockSelectionGlass
-                    }
-                    .frame(width: 152, height: 44)
+                // 선택 슬롯끼리만 같은 글라스 형태로 morph합니다.
+                GlassEffectContainer(spacing: 4) {
+                    dockSelectionGlass
                 }
 
                 // 글라스 합성과 분리해 아이콘·글자가 굴절되거나 흐려지지 않게 합니다.
@@ -156,15 +158,29 @@ struct ContentView: View {
     @ViewBuilder
     private var dockSelectionGlass: some View {
         if #available(iOS 26.0, *) {
+            HStack(spacing: 0) {
+                dockSelectionSlot(for: .calendar)
+                dockSelectionSlot(for: .bookshelf)
+            }
+            .frame(width: 152, height: 44)
+            .allowsHitTesting(false)
+        }
+    }
+
+    @ViewBuilder
+    @available(iOS 26.0, *)
+    private func dockSelectionSlot(for tab: Tab) -> some View {
+        if selectedTab == tab {
             Capsule()
                 .fill(.clear)
-                .glassEffect(.clear.interactive(), in: Capsule())
+                .glassEffect(.clear, in: Capsule())
                 .frame(width: 73, height: 38)
-                .offset(x: selectedTab == .calendar ? 3 : 76)
-                .matchedGeometryEffect(id: "dock-selection", in: dockGlassNamespace)
                 .glassEffectID("dock-selection", in: dockGlassNamespace)
                 .glassEffectTransition(.matchedGeometry)
-                .allowsHitTesting(false)
+                .frame(width: 76, height: 44)
+        } else {
+            Color.clear
+                .frame(width: 76, height: 44)
         }
     }
 

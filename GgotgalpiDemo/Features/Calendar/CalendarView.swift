@@ -9,7 +9,9 @@ struct CalendarView: View {
     @State private var isShowingFilters = false
     @State private var reorderRequest: CalendarBookReorderRequest?
     @State private var isShowingDayEntries = false
-    @State private var isShowingSearch = false
+    @State private var isSearchExpanded = false
+    @State private var searchQuery = ""
+    @FocusState private var isSearchFieldFocused: Bool
 
     private func matchesCalendarFilters(_ entry: ReadingEntry) -> Bool {
         guard let book = store.book(for: entry.bookID), !book.isHiddenFromCalendar else {
@@ -61,8 +63,13 @@ struct CalendarView: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: GgotgalpiTheme.Spacing.section) {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: GgotgalpiTheme.Spacing.section) {
+                    if isSearchExpanded {
+                        InlineUnifiedSearchView(query: $searchQuery)
+                            .transition(.move(edge: .top).combined(with: .opacity))
+                    }
+
                     MonthlyCalendarGrid(
                         displayedMonth: $displayedMonth,
                         selectedDate: $selectedDate,
@@ -93,10 +100,12 @@ struct CalendarView: View {
             .scrollIndicators(.hidden)
             // 달력 카드와 안전 영역을 같은 웜 베이지로 이어 화면 전체가 한 장처럼 보이게 합니다.
             .background(GgotgalpiTheme.paper)
-            .overlay(alignment: .topTrailing) {
-                calendarActions
-                    .padding(.top, 0)
-                    .padding(.trailing, GgotgalpiTheme.Spacing.screen)
+            .overlay(alignment: .top) {
+                ZStack(alignment: .topTrailing) {
+                    calendarActions
+                }
+                .frame(maxWidth: .infinity, alignment: .topTrailing)
+                .padding(.horizontal, GgotgalpiTheme.Spacing.screen)
             }
         }
         .background(GgotgalpiTheme.paper.ignoresSafeArea())
@@ -123,49 +132,107 @@ struct CalendarView: View {
                 }
             )
         }
-        .sheet(isPresented: $isShowingSearch) {
-            UnifiedSearchView()
-        }
     }
 
     private var calendarActions: some View {
-        HStack(spacing: GgotgalpiTheme.Spacing.compact) {
-            if hasActiveFilter {
-                Button {
-                    isShowingFilters = true
-                } label: {
-                    Text(filterSummary)
-                        .font(.caption.weight(.medium))
-                        .lineLimit(1)
-                        // 아이콘 버튼의 내부 여백과 맞춰, 선택된 필터도 캡슐 안에서 균형 있게 보이게 합니다.
-                        .padding(.leading, GgotgalpiTheme.Spacing.control)
+        HStack(spacing: 0) {
+            if isSearchExpanded {
+                inlineSearchField
+            }
+
+            HStack(spacing: GgotgalpiTheme.Spacing.compact) {
+                if hasActiveFilter {
+                    Button {
+                        isShowingFilters = true
+                    } label: {
+                        Text(filterSummary)
+                            .font(.caption.weight(.medium))
+                            .lineLimit(1)
+                            // 아이콘 버튼의 내부 여백과 맞춰, 선택된 필터도 캡슐 안에서 균형 있게 보이게 합니다.
+                            .padding(.leading, GgotgalpiTheme.Spacing.control)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("적용된 필터: \(filterSummary)")
                 }
-                .buttonStyle(.plain)
-                .accessibilityLabel("적용된 필터: \(filterSummary)")
-            }
 
-            Button {
-                isShowingFilters = true
-            } label: {
-                Image(systemName: "line.3.horizontal.decrease.circle")
-                    .font(.body)
-                    .frame(width: 40, height: 40)
+                filterButton
+                searchButton
             }
-            .buttonStyle(.plain)
-            .accessibilityLabel("달력 필터")
-
-            Button {
-                isShowingSearch = true
-            } label: {
-                Image(systemName: "magnifyingglass")
-                    .font(.body)
-                    .frame(width: 40, height: 40)
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel("통합 검색")
         }
         .foregroundStyle(GgotgalpiTheme.ink)
+        .frame(maxWidth: isSearchExpanded ? .infinity : nil, alignment: .trailing)
         .background(Color.white.opacity(0.82), in: Capsule())
+        .animation(.easeInOut(duration: 0.24), value: isSearchExpanded)
+    }
+
+    private var filterButton: some View {
+        Button {
+            isShowingFilters = true
+        } label: {
+            Image(systemName: "line.3.horizontal.decrease.circle")
+                .font(.body)
+                .frame(width: 40, height: 40)
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("달력 필터")
+    }
+
+    private var searchButton: some View {
+        Button {
+            if isSearchExpanded {
+                closeSearch()
+            } else {
+                openSearch()
+            }
+        } label: {
+            Image(systemName: "magnifyingglass")
+                .font(.body)
+                .frame(width: 40, height: 40)
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(isSearchExpanded ? "검색 닫기" : "통합 검색")
+    }
+
+    private var inlineSearchField: some View {
+        HStack(spacing: 6) {
+            TextField("책, 감상문, 연도 또는 월", text: $searchQuery)
+                .textFieldStyle(.plain)
+                .font(.subheadline)
+                .focused($isSearchFieldFocused)
+                .submitLabel(.search)
+                .frame(maxWidth: .infinity)
+
+            if !searchQuery.isEmpty {
+                Button {
+                    searchQuery = ""
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.caption)
+                        .foregroundStyle(GgotgalpiTheme.secondaryInk)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("검색어 지우기")
+            }
+        }
+        .padding(.horizontal, GgotgalpiTheme.Spacing.control)
+        .frame(maxWidth: .infinity)
+        .frame(height: 40)
+        .transition(.scale(scale: 0.1, anchor: .trailing).combined(with: .opacity))
+    }
+
+    private func openSearch() {
+        withAnimation(.easeInOut(duration: 0.24)) {
+            isSearchExpanded = true
+        }
+        isSearchFieldFocused = true
+    }
+
+    private func closeSearch() {
+        isSearchFieldFocused = false
+        withAnimation(.easeInOut(duration: 0.24)) {
+            isSearchExpanded = false
+        }
+        searchQuery = ""
     }
 }
 

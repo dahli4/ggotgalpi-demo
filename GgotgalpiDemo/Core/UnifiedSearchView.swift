@@ -9,90 +9,15 @@ struct UnifiedSearchView: View {
     @State private var selectedBook: Book?
     @State private var showingAddBook = false
 
-    private let calendar = Calendar.current
-
-    private var normalizedQuery: String {
-        query.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+    private var searchSnapshot: UnifiedSearchSnapshot {
+        UnifiedSearchSnapshot(query: query, store: store)
     }
 
-    private var dateFilter: SearchDateFilter? {
-        let numbers = normalizedQuery
-            .split(whereSeparator: { !$0.isNumber })
-            .compactMap { Int($0) }
-
-        let year = numbers.first(where: { (1000...9999).contains($0) })
-        let month = numbers.last(where: { (1...12).contains($0) })
-
-        if normalizedQuery.contains("년") {
-            guard let year else { return nil }
-            if normalizedQuery.contains("월"), let month {
-                return .yearMonth(year: year, month: month)
-            }
-            return .year(year)
-        }
-
-        if normalizedQuery.contains("월"), let month {
-            return year.map { .yearMonth(year: $0, month: month) } ?? .month(month)
-        }
-
-        if normalizedQuery.count == 4, let year, numbers.count == 1 {
-            return .year(year)
-        }
-
-        return nil
-    }
-
-    private var textQuery: String {
-        guard dateFilter != nil else { return normalizedQuery }
-
-        let numbers = normalizedQuery
-            .split(whereSeparator: { !$0.isNumber })
-            .compactMap { Int($0) }
-
-        return numbers.reduce(
-            normalizedQuery.replacingOccurrences(of: "년", with: " ")
-                .replacingOccurrences(of: "월", with: " ")
-        ) { partial, number in
-            partial.replacingOccurrences(of: String(number), with: " ")
-        }
-        .trimmingCharacters(in: .whitespacesAndNewlines)
-    }
-
-    private var compactTextQuery: String {
-        textQuery.removingWhitespaceAndNewlines
-    }
-
-    private var hasSearchTerm: Bool {
-        !normalizedQuery.isEmpty
-    }
-
-    private var matchingEntries: [ReadingEntry] {
-        store.entries
-            .filter { entry in
-                let matchesDate = dateFilter.map { $0.matches(entry.date, calendar: calendar) } ?? true
-                return matchesDate && matches(entry: entry)
-            }
-            .sorted { $0.date > $1.date }
-    }
-
-    private var matchingBooks: [Book] {
-        if dateFilter != nil {
-            let bookIDs = Set(matchingEntries.map(\.bookID))
-            return store.books.filter { bookIDs.contains($0.id) }
-        }
-
-        return store.books.filter(matches(book:))
-    }
-
-    private var entryMonthGroups: [SearchEntryMonthGroup] {
-        let groupedEntries = Dictionary(grouping: matchingEntries) { entry in
-            calendar.date(from: calendar.dateComponents([.year, .month], from: entry.date)) ?? entry.date
-        }
-
-        return groupedEntries
-            .map { SearchEntryMonthGroup(month: $0.key, entries: $0.value.sorted { $0.date > $1.date }) }
-            .sorted { $0.month > $1.month }
-    }
+    private var hasSearchTerm: Bool { searchSnapshot.hasSearchTerm }
+    private var dateFilter: SearchDateFilter? { searchSnapshot.dateFilter }
+    private var matchingEntries: [ReadingEntry] { searchSnapshot.matchingEntries }
+    private var matchingBooks: [Book] { searchSnapshot.matchingBooks }
+    private var entryMonthGroups: [SearchEntryMonthGroup] { searchSnapshot.entryMonthGroups }
 
     var body: some View {
         NavigationStack {
@@ -178,24 +103,219 @@ struct UnifiedSearchView: View {
         .paperBackground()
     }
 
-    private func matches(book: Book) -> Bool {
-        guard !textQuery.isEmpty else { return dateFilter != nil }
-        let searchableText = [book.title, book.author, book.category.rawValue, book.readingStatus.rawValue]
-            .joined(separator: " ")
-        return matchesSearchText(searchableText)
+    @ViewBuilder
+    private func searchEntryRows(_ entries: [ReadingEntry]) -> some View {
+        ForEach(entries) { entry in
+            if let book = store.book(for: entry.bookID) {
+                Button {
+                    selectedBook = book
+                } label: {
+                    SearchEntryRow(book: book, entry: entry)
+                }
+                .buttonStyle(.plain)
+            }
+        }
+    }
+}
+
+/// 검색어를 화면과 무관하게 해석해 책·감상 기록 결과를 공유합니다.
+@MainActor
+private struct UnifiedSearchSnapshot {
+    let hasSearchTerm: Bool
+    let dateFilter: SearchDateFilter?
+    let matchingEntries: [ReadingEntry]
+    let matchingBooks: [Book]
+    let entryMonthGroups: [SearchEntryMonthGroup]
+
+    init(query: String, store: DemoStore) {
+        let calendar = Calendar.current
+        let normalizedQuery = query.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        let dateFilter = Self.makeDateFilter(from: normalizedQuery)
+        let textQuery = Self.makeTextQuery(from: normalizedQuery, dateFilter: dateFilter)
+        let compactTextQuery = textQuery.removingWhitespaceAndNewlines
+
+        func matchesSearchText(_ searchableText: String) -> Bool {
+            searchableText.localizedCaseInsensitiveContains(textQuery)
+                || searchableText.removingWhitespaceAndNewlines.localizedCaseInsensitiveContains(compactTextQuery)
+        }
+
+        func matches(book: Book) -> Bool {
+            guard !textQuery.isEmpty else { return dateFilter != nil }
+            let searchableText = [book.title, book.author, book.category.rawValue, book.readingStatus.rawValue]
+                .joined(separator: " ")
+            return matchesSearchText(searchableText)
+        }
+
+        func matches(entry: ReadingEntry) -> Bool {
+            guard !textQuery.isEmpty else { return true }
+            guard let book = store.book(for: entry.bookID) else { return false }
+            let searchableText = [book.title, book.author, entry.note]
+                .joined(separator: " ")
+            return matchesSearchText(searchableText)
+        }
+
+        let matchingEntries = store.entries
+            .filter { entry in
+                let matchesDate = dateFilter.map { $0.matches(entry.date, calendar: calendar) } ?? true
+                return matchesDate && matches(entry: entry)
+            }
+            .sorted { $0.date > $1.date }
+
+        let matchingBooks: [Book]
+        if dateFilter != nil {
+            let bookIDs = Set(matchingEntries.map(\.bookID))
+            matchingBooks = store.books.filter { bookIDs.contains($0.id) }
+        } else {
+            matchingBooks = store.books.filter(matches(book:))
+        }
+
+        let groupedEntries = Dictionary(grouping: matchingEntries) { entry in
+            calendar.date(from: calendar.dateComponents([.year, .month], from: entry.date)) ?? entry.date
+        }
+
+        self.hasSearchTerm = !normalizedQuery.isEmpty
+        self.dateFilter = dateFilter
+        self.matchingEntries = matchingEntries
+        self.matchingBooks = matchingBooks
+        self.entryMonthGroups = groupedEntries
+            .map { SearchEntryMonthGroup(month: $0.key, entries: $0.value.sorted { $0.date > $1.date }) }
+            .sorted { $0.month > $1.month }
     }
 
-    private func matches(entry: ReadingEntry) -> Bool {
-        guard !textQuery.isEmpty else { return true }
-        guard let book = store.book(for: entry.bookID) else { return false }
-        let searchableText = [book.title, book.author, entry.note]
-            .joined(separator: " ")
-        return matchesSearchText(searchableText)
+    private static func makeDateFilter(from normalizedQuery: String) -> SearchDateFilter? {
+        let numbers = normalizedQuery
+            .split(whereSeparator: { !$0.isNumber })
+            .compactMap { Int($0) }
+
+        let year = numbers.first(where: { (1000...9999).contains($0) })
+        let month = numbers.last(where: { (1...12).contains($0) })
+
+        if normalizedQuery.contains("년") {
+            guard let year else { return nil }
+            if normalizedQuery.contains("월"), let month {
+                return .yearMonth(year: year, month: month)
+            }
+            return .year(year)
+        }
+
+        if normalizedQuery.contains("월"), let month {
+            return year.map { .yearMonth(year: $0, month: month) } ?? .month(month)
+        }
+
+        if normalizedQuery.count == 4, let year, numbers.count == 1 {
+            return .year(year)
+        }
+
+        return nil
     }
 
-    private func matchesSearchText(_ searchableText: String) -> Bool {
-        searchableText.localizedCaseInsensitiveContains(textQuery)
-            || searchableText.removingWhitespaceAndNewlines.localizedCaseInsensitiveContains(compactTextQuery)
+    private static func makeTextQuery(from normalizedQuery: String, dateFilter: SearchDateFilter?) -> String {
+        guard dateFilter != nil else { return normalizedQuery }
+
+        let numbers = normalizedQuery
+            .split(whereSeparator: { !$0.isNumber })
+            .compactMap { Int($0) }
+
+        return numbers.reduce(
+            normalizedQuery.replacingOccurrences(of: "년", with: " ")
+                .replacingOccurrences(of: "월", with: " ")
+        ) { partial, number in
+            partial.replacingOccurrences(of: String(number), with: " ")
+        }
+        .trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+}
+
+/// 달력 화면 안에 표시하는 통합 검색 결과입니다.
+struct InlineUnifiedSearchView: View {
+    @EnvironmentObject private var store: DemoStore
+    @Binding var query: String
+    @State private var selectedBook: Book?
+    @State private var showingAddBook = false
+
+    private var snapshot: UnifiedSearchSnapshot {
+        UnifiedSearchSnapshot(query: query, store: store)
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: GgotgalpiTheme.Spacing.section) {
+            if !snapshot.hasSearchTerm {
+                VStack(alignment: .leading, spacing: GgotgalpiTheme.Spacing.control) {
+                    SearchGuideRow(
+                        icon: "text.magnifyingglass",
+                        title: "책과 기록을 함께 찾아보세요",
+                        message: "책 제목, 작가 이름, 감상문 내용을 입력할 수 있어요."
+                    )
+                    SearchGuideRow(
+                        icon: "calendar",
+                        title: "날짜로도 찾을 수 있어요",
+                        message: "예: 2026년 · 2026년 8월 · 8월"
+                    )
+                }
+
+                addBookButton
+            } else if snapshot.matchingBooks.isEmpty && snapshot.matchingEntries.isEmpty {
+                ReadingEmptyState(
+                    title: "검색 결과가 없어요",
+                    message: "다른 제목, 감상문 문장, 또는 날짜로 찾아보세요."
+                )
+                addBookButton
+            } else {
+                if !snapshot.matchingBooks.isEmpty {
+                    VStack(alignment: .leading, spacing: GgotgalpiTheme.Spacing.control) {
+                        Text(snapshot.dateFilter == nil ? "등록된 책" : "해당 기간에 읽은 책")
+                            .font(.headline)
+                            .foregroundStyle(GgotgalpiTheme.ink)
+
+                        ForEach(snapshot.matchingBooks) { book in
+                            Button {
+                                selectedBook = book
+                            } label: {
+                                SearchBookRow(book: book, entryCount: store.entries(for: book.id).count)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                }
+
+                if !snapshot.matchingEntries.isEmpty {
+                    if case .month = snapshot.dateFilter {
+                        ForEach(snapshot.entryMonthGroups) { group in
+                            VStack(alignment: .leading, spacing: GgotgalpiTheme.Spacing.control) {
+                                Text(group.title)
+                                    .font(.headline)
+                                    .foregroundStyle(GgotgalpiTheme.ink)
+                                searchEntryRows(group.entries)
+                            }
+                        }
+                    } else {
+                        VStack(alignment: .leading, spacing: GgotgalpiTheme.Spacing.control) {
+                            Text("감상 기록")
+                                .font(.headline)
+                                .foregroundStyle(GgotgalpiTheme.ink)
+                            searchEntryRows(snapshot.matchingEntries)
+                        }
+                    }
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .sheet(item: $selectedBook) { book in
+            BookDetailView(book: book)
+        }
+        .sheet(isPresented: $showingAddBook) {
+            AddBookView()
+        }
+    }
+
+    private var addBookButton: some View {
+        Button {
+            showingAddBook = true
+        } label: {
+            Label("새 책 직접 등록", systemImage: "plus.circle")
+                .foregroundStyle(GgotgalpiTheme.ink)
+        }
+        .buttonStyle(.plain)
     }
 
     @ViewBuilder
