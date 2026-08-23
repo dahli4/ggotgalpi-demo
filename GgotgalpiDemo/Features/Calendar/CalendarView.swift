@@ -87,6 +87,10 @@ struct CalendarView: View {
         return store.books.filter { bookIDs.contains($0.id) }
     }
 
+    private var isDisplayingCurrentMonth: Bool {
+        Calendar.current.isDate(displayedMonth, equalTo: Date(), toGranularity: .month)
+    }
+
     var body: some View {
         NavigationStack {
                 ScrollView {
@@ -140,6 +144,21 @@ struct CalendarView: View {
                     // 따라서 leading / trailing 여백은 항상 동일합니다.
                     .frame(maxWidth: .infinity, alignment: .trailing)
                     .padding(.horizontal, GgotgalpiTheme.Spacing.screen)
+            }
+            .overlay(alignment: .topLeading) {
+                if !isDisplayingCurrentMonth && !isSearchExpanded {
+                    Button("오늘") {
+                        let today = Calendar.current.startOfDay(for: Date())
+                        selectedDate = today
+                        displayedMonth = Calendar.current.startOfMonth(for: today)
+                    }
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(GgotgalpiTheme.ink)
+                    .frame(height: 40)
+                    .padding(.horizontal, GgotgalpiTheme.Spacing.control)
+                    .background(Color.white.opacity(0.82), in: Capsule())
+                    .padding(.leading, GgotgalpiTheme.Spacing.screen)
+                }
             }
         }
         .background(GgotgalpiTheme.paper.ignoresSafeArea())
