@@ -71,6 +71,22 @@ struct CalendarView: View {
         monthlyEntries.max { $0.createdAt < $1.createdAt }
     }
 
+    private var lastYearMonth: Date {
+        Calendar.current.date(byAdding: .year, value: -1, to: displayedMonth) ?? displayedMonth
+    }
+
+    private var lastYearMonthlyBooks: [Book] {
+        let bookIDs = Set(
+            store.entries
+                .filter {
+                    Calendar.current.isDate($0.date, equalTo: lastYearMonth, toGranularity: .month)
+                        && matchesCalendarFilters($0)
+                }
+                .map(\.bookID)
+        )
+        return store.books.filter { bookIDs.contains($0.id) }
+    }
+
     var body: some View {
         NavigationStack {
                 ScrollView {
@@ -102,7 +118,9 @@ struct CalendarView: View {
                         CalendarMonthlySummary(
                             entries: monthlyEntries,
                             latestEntry: mostRecentMonthlyEntry,
-                            latestBook: mostRecentMonthlyEntry.flatMap { store.book(for: $0.bookID) }
+                            latestBook: mostRecentMonthlyEntry.flatMap { store.book(for: $0.bookID) },
+                            lastYearMonth: lastYearMonth,
+                            lastYearBooks: lastYearMonthlyBooks
                         )
                     }
                 }
@@ -110,7 +128,8 @@ struct CalendarView: View {
                 .padding(.horizontal, GgotgalpiTheme.Spacing.screen)
                 // 기존 내비게이션 바가 차지하던 높이를 유지해 상단 액션과 달력이 겹치지 않게 합니다.
                 .padding(.top, GgotgalpiTheme.Spacing.control + GgotgalpiTheme.Spacing.largeSection + GgotgalpiTheme.Spacing.content + GgotgalpiTheme.Spacing.compact)
-                .padding(.bottom, GgotgalpiTheme.Spacing.compact)
+                // 하단 플로팅 독에 마지막 요약 항목이 가려지지 않도록 스크롤 여유를 둡니다.
+                .padding(.bottom, GgotgalpiTheme.Spacing.largeSection * 3)
             }
             .scrollIndicators(.hidden)
             // 달력 카드와 안전 영역을 같은 웜 베이지로 이어 화면 전체가 한 장처럼 보이게 합니다.
@@ -272,6 +291,9 @@ private struct CalendarMonthlySummary: View {
     let entries: [ReadingEntry]
     let latestEntry: ReadingEntry?
     let latestBook: Book?
+    let lastYearMonth: Date
+    let lastYearBooks: [Book]
+    @State private var featuredLastYearBookID: UUID?
 
     private var readBookCount: Int {
         Set(entries.map(\.bookID)).count
@@ -279,6 +301,14 @@ private struct CalendarMonthlySummary: View {
 
     private var readPageCount: Int {
         entries.reduce(0) { $0 + max(0, $1.pageTo - $1.pageFrom + 1) }
+    }
+
+    private var featuredLastYearBook: Book? {
+        if let featuredLastYearBookID,
+           let book = lastYearBooks.first(where: { $0.id == featuredLastYearBookID }) {
+            return book
+        }
+        return lastYearBooks.first
     }
 
     var body: some View {
@@ -316,7 +346,46 @@ private struct CalendarMonthlySummary: View {
                     .font(.subheadline)
                     .foregroundStyle(GgotgalpiTheme.secondaryInk)
             }
+
+            VStack(alignment: .leading, spacing: 7) {
+                Text("지난 이맘때")
+                    .font(.system(.headline, design: .serif))
+                    .foregroundStyle(GgotgalpiTheme.ink)
+
+                if let featuredLastYearBook {
+                    HStack(spacing: 10) {
+                        BookColorMark(
+                            title: featuredLastYearBook.title,
+                            color: featuredLastYearBook.coverColor,
+                            size: 38
+                        )
+
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(featuredLastYearBook.title)
+                                .font(.subheadline.weight(.semibold))
+                                .foregroundStyle(GgotgalpiTheme.ink)
+
+                            Text(featuredLastYearBook.author)
+                                .font(.caption)
+                                .foregroundStyle(GgotgalpiTheme.secondaryInk)
+                        }
+                    }
+                } else {
+                    Text("이 달에 읽은 책이 없어요.")
+                        .font(.subheadline)
+                        .foregroundStyle(GgotgalpiTheme.secondaryInk)
+                }
+            }
+            .padding(.top, GgotgalpiTheme.Spacing.largeSection * 2)
         }
+        .onAppear(perform: selectFeaturedLastYearBook)
+        .onChange(of: lastYearBooks.map(\.id)) {
+            selectFeaturedLastYearBook()
+        }
+    }
+
+    private func selectFeaturedLastYearBook() {
+        featuredLastYearBookID = lastYearBooks.randomElement()?.id
     }
 }
 
@@ -610,6 +679,7 @@ private struct MonthlyCalendarGrid: View {
     let books: (Date) -> [Book]
     let selectDate: (Date) -> Void
     let requestReorder: (Date) -> Void
+    @State private var isShowingMonthPicker = false
 
     private let calendar = Calendar.current
     private let columns = Array(repeating: GridItem(.flexible(), spacing: 0), count: 7)
@@ -656,9 +726,15 @@ private struct MonthlyCalendarGrid: View {
 
                     Spacer()
 
-                    Text(monthTitle)
-                        .font(.headline)
-                        .foregroundStyle(GgotgalpiTheme.ink)
+                    Button {
+                        isShowingMonthPicker = true
+                    } label: {
+                        Text(monthTitle)
+                            .font(.headline)
+                            .foregroundStyle(GgotgalpiTheme.ink)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("\(monthTitle), 연도와 월 선택")
 
                     Spacer()
 
@@ -707,6 +783,10 @@ private struct MonthlyCalendarGrid: View {
             .shadow(color: .black.opacity(0.045), radius: 8, y: 3)
         }
         .frame(height: calendarHeight)
+        .sheet(isPresented: $isShowingMonthPicker) {
+            CalendarMonthPicker(displayedMonth: $displayedMonth)
+                .presentationDetents([.height(330)])
+        }
     }
 
     private var monthTitle: String {
@@ -714,6 +794,152 @@ private struct MonthlyCalendarGrid: View {
         let year = (components.year ?? 0) % 100
         let month = components.month ?? 0
         return "\(year)년 \(month)월"
+    }
+}
+
+private struct CalendarMonthPicker: View {
+    @Environment(\.dismiss) private var dismiss
+    @Binding var displayedMonth: Date
+    @State private var selectedYear: Int
+    @State private var selectedMonth: Int
+    @State private var yearText: String
+    @State private var monthText: String
+    @State private var yearAnimationID = UUID()
+    @State private var monthAnimationID = UUID()
+    @State private var isAnimatingYear = false
+    @State private var isAnimatingMonth = false
+
+    private let calendar = Calendar.current
+
+    init(displayedMonth: Binding<Date>) {
+        self._displayedMonth = displayedMonth
+        let components = Calendar.current.dateComponents([.year, .month], from: displayedMonth.wrappedValue)
+        let year = components.year ?? Calendar.current.component(.year, from: Date())
+        let month = components.month ?? 1
+        self._selectedYear = State(initialValue: year)
+        self._selectedMonth = State(initialValue: month)
+        self._yearText = State(initialValue: String(year))
+        self._monthText = State(initialValue: String(month))
+    }
+
+    private var availableYears: [Int] {
+        let currentYear = calendar.component(.year, from: Date())
+        return Array((currentYear - 100)...(currentYear + 20))
+    }
+
+    var body: some View {
+        NavigationStack {
+            HStack(spacing: 0) {
+                Picker("연도", selection: $selectedYear) {
+                    ForEach(availableYears, id: \.self) { year in
+                        Text(String(year) + "년").tag(year)
+                    }
+                }
+                .pickerStyle(.wheel)
+
+                Picker("월", selection: $selectedMonth) {
+                    ForEach(1...12, id: \.self) { month in
+                        Text(String(month) + "월").tag(month)
+                    }
+                }
+                .pickerStyle(.wheel)
+            }
+            .padding(.horizontal, GgotgalpiTheme.Spacing.screen)
+            .navigationBarTitleDisplayMode(.inline)
+            .onChange(of: selectedYear) {
+                if !isAnimatingYear {
+                    yearText = String(selectedYear)
+                }
+            }
+            .onChange(of: selectedMonth) {
+                if !isAnimatingMonth {
+                    monthText = String(selectedMonth)
+                }
+            }
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("취소") { dismiss() }
+                }
+
+                ToolbarItem(placement: .principal) {
+                    HStack(spacing: 2) {
+                        TextField("연도", text: $yearText)
+                            .keyboardType(.numberPad)
+                            .multilineTextAlignment(.trailing)
+                            .frame(width: 46)
+                            .onChange(of: yearText) {
+                                if let year = Int(yearText), availableYears.contains(year) {
+                                    scrollYear(to: year)
+                                }
+                            }
+
+                        Text("년")
+
+                        TextField("월", text: $monthText)
+                            .keyboardType(.numberPad)
+                            .multilineTextAlignment(.trailing)
+                            .frame(width: 22)
+                            .onChange(of: monthText) {
+                                if let month = Int(monthText), (1...12).contains(month) {
+                                    scrollMonth(to: month)
+                                }
+                            }
+
+                        Text("월")
+                    }
+                    .font(.headline)
+                    .foregroundStyle(GgotgalpiTheme.ink)
+                }
+
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("이동") {
+                        let components = DateComponents(year: selectedYear, month: selectedMonth, day: 1)
+                        displayedMonth = calendar.date(from: components) ?? displayedMonth
+                        dismiss()
+                    }
+                }
+            }
+        }
+    }
+
+    private func scrollYear(to target: Int) {
+        guard selectedYear != target else { return }
+        let animationID = UUID()
+        yearAnimationID = animationID
+        isAnimatingYear = true
+        let stepDelay = UInt64(max(1, 200_000_000 / max(abs(target - selectedYear), 1)))
+
+        Task { @MainActor in
+            while selectedYear != target, yearAnimationID == animationID {
+                try? await Task.sleep(nanoseconds: stepDelay)
+                guard yearAnimationID == animationID else { return }
+                selectedYear += selectedYear < target ? 1 : -1
+            }
+
+            guard yearAnimationID == animationID else { return }
+            isAnimatingYear = false
+            yearText = String(target)
+        }
+    }
+
+    private func scrollMonth(to target: Int) {
+        guard selectedMonth != target else { return }
+        let animationID = UUID()
+        monthAnimationID = animationID
+        isAnimatingMonth = true
+        let stepDelay = UInt64(max(1, 100_000_000 / max(abs(target - selectedMonth), 1)))
+
+        Task { @MainActor in
+            while selectedMonth != target, monthAnimationID == animationID {
+                try? await Task.sleep(nanoseconds: stepDelay)
+                guard monthAnimationID == animationID else { return }
+                selectedMonth += selectedMonth < target ? 1 : -1
+            }
+
+            guard monthAnimationID == animationID else { return }
+            isAnimatingMonth = false
+            monthText = String(target)
+        }
     }
 }
 

@@ -123,11 +123,17 @@ final class DemoStore: ObservableObject {
         let calendar = Calendar.current
         let today = calendar.startOfDay(for: Date())
         let now = Date()
+        let august3LastYear = calendar.date(from: DateComponents(year: 2025, month: 8, day: 3)) ?? today
+        let august12LastYear = calendar.date(from: DateComponents(year: 2025, month: 8, day: 12)) ?? today
+        let august23LastYear = calendar.date(from: DateComponents(year: 2025, month: 8, day: 23)) ?? today
         entries = [
             ReadingEntry(bookID: littlePrince.id, date: today, createdAt: now.addingTimeInterval(-180), pageFrom: 1, pageTo: 34, note: "어른이 된다는 건 중요한 것을 잊는 일일까. 작은 별의 풍경이 오래 남았다.", readingRound: 1),
             ReadingEntry(bookID: quietReading.id, date: today, createdAt: now, pageFrom: 24, pageTo: 58, note: "작은 행동을 반복하는 일이 결국 나를 만든다는 문장이 좋았다.", readingRound: 1),
             ReadingEntry(bookID: littlePrince.id, date: calendar.date(byAdding: .day, value: -5, to: today) ?? today, createdAt: now.addingTimeInterval(-14_400), pageFrom: 35, pageTo: 72, note: "길들인다는 것과 관계를 맺는다는 것에 대해 생각했다.", readingRound: 1),
-            ReadingEntry(bookID: littlePrince.id, date: calendar.date(byAdding: .day, value: -7, to: today) ?? today, createdAt: now.addingTimeInterval(-28_800), pageFrom: 1, pageTo: 20, note: "두 번째로 읽으니 처음과 다른 문장이 보인다.", readingRound: 2)
+            ReadingEntry(bookID: littlePrince.id, date: calendar.date(byAdding: .day, value: -7, to: today) ?? today, createdAt: now.addingTimeInterval(-28_800), pageFrom: 1, pageTo: 20, note: "두 번째로 읽으니 처음과 다른 문장이 보인다.", readingRound: 2),
+            ReadingEntry(bookID: littlePrince.id, date: august3LastYear, createdAt: august3LastYear.addingTimeInterval(36_000), pageFrom: 73, pageTo: 104, note: "여름의 끝에서 다시 읽으니 여우의 말이 더 선명하게 다가왔다.", readingRound: 0),
+            ReadingEntry(bookID: quietReading.id, date: august12LastYear, createdAt: august12LastYear.addingTimeInterval(36_000), pageFrom: 59, pageTo: 81, note: "작은 습관을 눈에 보이게 만드는 방법을 실천해 보기로 했다.", readingRound: 0),
+            ReadingEntry(bookID: littlePrince.id, date: august23LastYear, createdAt: august23LastYear.addingTimeInterval(36_000), pageFrom: 105, pageTo: 128, note: "별을 바라보는 마음을 오래 기억하고 싶다는 감상을 남겼다.", readingRound: 0)
         ]
 
         loadCalendarBookOrders()
