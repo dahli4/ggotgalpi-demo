@@ -24,6 +24,7 @@ struct Book: Identifiable, Hashable {
     let id: UUID
     var title: String
     var author: String
+    var publisher: String
     var category: BookCategory
     var readingStatus: ReadingStatus
     var coverColor: Color
@@ -33,6 +34,7 @@ struct Book: Identifiable, Hashable {
         id: UUID = UUID(),
         title: String,
         author: String,
+        publisher: String = "",
         category: BookCategory,
         readingStatus: ReadingStatus = .wantToRead,
         coverColor: Color,
@@ -41,6 +43,7 @@ struct Book: Identifiable, Hashable {
         self.id = id
         self.title = title
         self.author = author
+        self.publisher = publisher
         self.category = category
         self.readingStatus = readingStatus
         self.coverColor = coverColor
@@ -143,13 +146,21 @@ final class DemoStore: ObservableObject {
         return entries.filter { calendar.isDate($0.date, inSameDayAs: date) }
     }
 
-    func addBook(title: String, author: String, category: BookCategory) {
+    func addBook(title: String, author: String, publisher: String = "", category: BookCategory) {
         let colors: [Color] = [
             Color(red: 0.57, green: 0.62, blue: 0.54),
             Color(red: 0.64, green: 0.53, blue: 0.48),
             Color(red: 0.48, green: 0.53, blue: 0.63)
         ]
-        books.append(Book(title: title, author: author, category: category, coverColor: colors[books.count % colors.count]))
+        books.append(
+            Book(
+                title: title,
+                author: author,
+                publisher: publisher,
+                category: category,
+                coverColor: colors[books.count % colors.count]
+            )
+        )
     }
 
     func addEntry(bookID: UUID, date: Date, pageFrom: Int, pageTo: Int, note: String, readingRound: Int) {
@@ -168,6 +179,24 @@ final class DemoStore: ObservableObject {
     func markBookAsFinished(id: UUID) {
         guard let index = books.firstIndex(where: { $0.id == id }) else { return }
         books[index].readingStatus = .finished
+    }
+
+    func updateBook(
+        id: UUID,
+        title: String,
+        author: String,
+        publisher: String,
+        category: BookCategory,
+        readingStatus: ReadingStatus,
+        isHiddenFromCalendar: Bool
+    ) {
+        guard let index = books.firstIndex(where: { $0.id == id }) else { return }
+        books[index].title = title
+        books[index].author = author
+        books[index].publisher = publisher
+        books[index].category = category
+        books[index].readingStatus = readingStatus
+        books[index].isHiddenFromCalendar = isHiddenFromCalendar
     }
 
     /// 사용자가 정한 순서를 먼저 유지하고, 새로 생긴 작품은 그 뒤에 덧붙입니다.

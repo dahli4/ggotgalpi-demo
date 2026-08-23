@@ -5,6 +5,7 @@ struct AddBookView: View {
     @EnvironmentObject private var store: DemoStore
     @State private var title = ""
     @State private var author = ""
+    @State private var publisher = ""
     @State private var category: BookCategory = .literature
 
     var body: some View {
@@ -13,6 +14,7 @@ struct AddBookView: View {
                 Section {
                     TextField("책 제목", text: $title)
                     TextField("작가", text: $author)
+                    TextField("출판사", text: $publisher)
                     Picker("분야", selection: $category) {
                         ForEach(BookCategory.allCases.filter { $0 != .all }) { category in
                             Text(category.rawValue).tag(category)
@@ -34,7 +36,7 @@ struct AddBookView: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("저장") {
-                        store.addBook(title: title, author: author, category: category)
+                        store.addBook(title: title, author: author, publisher: publisher, category: category)
                         dismiss()
                     }
                     .disabled(title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
@@ -42,6 +44,80 @@ struct AddBookView: View {
             }
         }
         .presentationDetents([.medium])
+        .paperBackground()
+    }
+}
+
+struct EditBookView: View {
+    @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var store: DemoStore
+    let book: Book
+    @State private var title: String
+    @State private var author: String
+    @State private var publisher: String
+    @State private var category: BookCategory
+    @State private var readingStatus: ReadingStatus
+    @State private var isHiddenFromCalendar: Bool
+
+    init(book: Book) {
+        self.book = book
+        _title = State(initialValue: book.title)
+        _author = State(initialValue: book.author)
+        _publisher = State(initialValue: book.publisher)
+        _category = State(initialValue: book.category)
+        _readingStatus = State(initialValue: book.readingStatus)
+        _isHiddenFromCalendar = State(initialValue: book.isHiddenFromCalendar)
+    }
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("책 정보") {
+                    TextField("책 제목", text: $title)
+                    TextField("작가", text: $author)
+                    TextField("출판사", text: $publisher)
+                    Picker("분야", selection: $category) {
+                        ForEach(BookCategory.allCases.filter { $0 != .all }) { category in
+                            Text(category.rawValue).tag(category)
+                        }
+                    }
+                }
+
+                Section("읽기 설정") {
+                    Picker("읽기 상태", selection: $readingStatus) {
+                        ForEach(ReadingStatus.allCases.filter { $0 != .all }) { status in
+                            Text(status.rawValue).tag(status)
+                        }
+                    }
+                    Toggle("달력에서 숨기기", isOn: $isHiddenFromCalendar)
+                }
+            }
+            .scrollContentBackground(.hidden)
+            .background(GgotgalpiTheme.paper)
+            .navigationTitle("책 정보 수정")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("취소") { dismiss() }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("저장") {
+                        store.updateBook(
+                            id: book.id,
+                            title: title,
+                            author: author,
+                            publisher: publisher,
+                            category: category,
+                            readingStatus: readingStatus,
+                            isHiddenFromCalendar: isHiddenFromCalendar
+                        )
+                        dismiss()
+                    }
+                    .disabled(title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                }
+            }
+        }
+        .presentationDetents([.large])
         .paperBackground()
     }
 }

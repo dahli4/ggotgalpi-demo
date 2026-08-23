@@ -5,10 +5,15 @@ struct BookDetailView: View {
     @EnvironmentObject private var store: DemoStore
     let book: Book
     @State private var showingAddEntry = false
+    @State private var showingEditBook = false
     @State private var editingEntry: ReadingEntry?
 
+    private var currentBook: Book {
+        store.book(for: book.id) ?? book
+    }
+
     private var bookEntries: [ReadingEntry] {
-        store.entries(for: book.id)
+        store.entries(for: currentBook.id)
     }
 
     var body: some View {
@@ -16,16 +21,34 @@ struct BookDetailView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 25) {
                     HStack(alignment: .center, spacing: 16) {
-                        BookColorMark(title: book.title, color: book.coverColor, size: 72)
+                        BookColorMark(title: currentBook.title, color: currentBook.coverColor, size: 72)
 
                         VStack(alignment: .leading, spacing: 9) {
-                            Text(book.title)
-                                .font(.title2.weight(.semibold))
-                                .foregroundStyle(GgotgalpiTheme.ink)
-                            Text(book.author)
+                            HStack(spacing: 6) {
+                                Text(currentBook.title)
+                                    .font(.title2.weight(.semibold))
+                                    .foregroundStyle(GgotgalpiTheme.ink)
+
+                                Button {
+                                    showingEditBook = true
+                                } label: {
+                                    Image(systemName: "pencil")
+                                        .font(.caption.weight(.semibold))
+                                        .foregroundStyle(GgotgalpiTheme.secondaryInk)
+                                        .frame(width: 24, height: 24)
+                                }
+                                .buttonStyle(.plain)
+                                .accessibilityLabel("책 정보 수정")
+                            }
+                            Text(currentBook.author)
                                 .font(.subheadline)
                                 .foregroundStyle(GgotgalpiTheme.secondaryInk)
-                            Text(book.category.rawValue)
+                            if !currentBook.publisher.isEmpty {
+                                Text(currentBook.publisher)
+                                    .font(.caption)
+                                    .foregroundStyle(GgotgalpiTheme.secondaryInk)
+                            }
+                            Text(currentBook.category.rawValue)
                                 .font(.caption)
                                 .foregroundStyle(GgotgalpiTheme.secondaryInk)
                                 .padding(.horizontal, 9)
@@ -85,10 +108,13 @@ struct BookDetailView: View {
                 }
             }
             .sheet(isPresented: $showingAddEntry) {
-                AddReadingEntryView(book: book, editingEntry: nil)
+                AddReadingEntryView(book: currentBook, editingEntry: nil)
             }
             .sheet(item: $editingEntry) { entry in
-                AddReadingEntryView(book: book, editingEntry: entry)
+                AddReadingEntryView(book: currentBook, editingEntry: entry)
+            }
+            .sheet(isPresented: $showingEditBook) {
+                EditBookView(book: currentBook)
             }
         }
         .paperBackground()

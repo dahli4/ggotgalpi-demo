@@ -401,6 +401,7 @@ private struct CalendarDayEntriesSheet: View {
     @State private var books: [Book]
     @State private var editMode: EditMode = .inactive
     @State private var editingEntry: CalendarDayEntryEditRequest?
+    @State private var editingBook: Book?
     @State private var showingAddBook = false
 
     let date: Date
@@ -458,6 +459,10 @@ private struct CalendarDayEntriesSheet: View {
                                 editEntry: { entry in
                                     guard editMode != .active else { return }
                                     editingEntry = CalendarDayEntryEditRequest(book: book, entry: entry)
+                                },
+                                editBook: { book in
+                                    guard editMode != .active else { return }
+                                    editingBook = book
                                 }
                             )
                                 .contentShape(Rectangle())
@@ -491,6 +496,9 @@ private struct CalendarDayEntriesSheet: View {
             }
             .sheet(item: $editingEntry) { request in
                 AddReadingEntryView(book: request.book, editingEntry: request.entry)
+            }
+            .sheet(item: $editingBook) { book in
+                EditBookView(book: book)
             }
             .sheet(isPresented: $showingAddBook) {
                 AddBookView()
@@ -526,18 +534,39 @@ private struct CalendarDayEntryEditRequest: Identifiable {
 }
 
 private struct CalendarDayBookEntryRow: View {
+    @EnvironmentObject private var store: DemoStore
     let book: Book
     let entries: [ReadingEntry]
     let editEntry: (ReadingEntry) -> Void
+    let editBook: (Book) -> Void
+
+    private var currentBook: Book {
+        store.book(for: book.id) ?? book
+    }
 
     var body: some View {
         HStack(alignment: .top, spacing: GgotgalpiTheme.Spacing.control) {
-            BookColorMark(title: book.title, color: book.coverColor, size: 44)
+            Button {
+                editBook(currentBook)
+            } label: {
+                BookColorMark(title: currentBook.title, color: currentBook.coverColor, size: 44)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("\(currentBook.title) 책 정보 수정")
 
             VStack(alignment: .leading, spacing: GgotgalpiTheme.Spacing.compact) {
-                Text(book.title)
-                    .font(.headline)
-                    .foregroundStyle(GgotgalpiTheme.ink)
+                Button {
+                    if let entry = entries.first {
+                        editEntry(entry)
+                    }
+                } label: {
+                    Text(currentBook.title)
+                        .font(.headline)
+                        .foregroundStyle(GgotgalpiTheme.ink)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("\(currentBook.title) 감상 기록 수정")
 
                 ForEach(entries) { entry in
                     Button {

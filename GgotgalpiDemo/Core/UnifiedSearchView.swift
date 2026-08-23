@@ -145,7 +145,7 @@ private struct UnifiedSearchSnapshot {
 
         func matches(book: Book) -> Bool {
             guard !textQuery.isEmpty else { return dateFilter != nil }
-            let searchableText = [book.title, book.author, book.category.rawValue, book.readingStatus.rawValue]
+            let searchableText = [book.title, book.author, book.publisher, book.category.rawValue, book.readingStatus.rawValue]
                 .joined(separator: " ")
             return matchesSearchText(searchableText)
         }
