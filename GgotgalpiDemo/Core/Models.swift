@@ -165,6 +165,11 @@ final class DemoStore: ObservableObject {
         entries[index].readingRound = readingRound
     }
 
+    func markBookAsFinished(id: UUID) {
+        guard let index = books.firstIndex(where: { $0.id == id }) else { return }
+        books[index].readingStatus = .finished
+    }
+
     /// 사용자가 정한 순서를 먼저 유지하고, 새로 생긴 작품은 그 뒤에 덧붙입니다.
     func orderedBookIDs(for date: Date, defaultOrder: [UUID]) -> [UUID] {
         let dateKey = calendarDateKey(for: date)

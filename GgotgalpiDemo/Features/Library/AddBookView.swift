@@ -55,7 +55,8 @@ struct AddReadingEntryView: View {
     @State private var pageFrom = ""
     @State private var pageTo = ""
     @State private var note = ""
-    @State private var readingRound = 1
+    @State private var readingRound = 0
+    @State private var hasFinishedReadingRound = false
     @State private var hasInitializedValues = false
 
     private var mostRecentPage: Int? {
@@ -69,7 +70,7 @@ struct AddReadingEntryView: View {
             Form {
                 Section {
                     DatePicker("읽은 날짜", selection: $date, displayedComponents: .date)
-                    Stepper("\(readingRound)회독", value: $readingRound, in: 1...99)
+                    Stepper("\(readingRound)회독", value: $readingRound, in: 0...99)
                 }
 
                 Section("읽은 구간") {
@@ -88,6 +89,23 @@ struct AddReadingEntryView: View {
                 Section("감상") {
                     TextEditor(text: $note)
                         .frame(minHeight: 130)
+                }
+
+                Section {
+                    Button {
+                        hasFinishedReadingRound.toggle()
+                    } label: {
+                        HStack(spacing: GgotgalpiTheme.Spacing.control) {
+                            Image(systemName: hasFinishedReadingRound ? "checkmark.square.fill" : "square")
+                                .font(.title3)
+                            Text("이번 회독을 마치셨나요?")
+                            Spacer()
+                        }
+                        .foregroundStyle(GgotgalpiTheme.ink)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("이번 회독을 마치셨나요?")
+                    .accessibilityValue(hasFinishedReadingRound ? "선택됨" : "선택되지 않음")
                 }
             }
             .scrollContentBackground(.hidden)
@@ -119,6 +137,10 @@ struct AddReadingEntryView: View {
                                 readingRound: readingRound
                             )
                         }
+
+                        if hasFinishedReadingRound {
+                            store.markBookAsFinished(id: book.id)
+                        }
                         dismiss()
                     }
                 }
@@ -138,6 +160,7 @@ struct AddReadingEntryView: View {
                 pageTo = String(editingEntry.pageTo)
                 note = editingEntry.note
                 readingRound = editingEntry.readingRound
+                hasFinishedReadingRound = book.readingStatus == .finished
             } else if book.readingStatus == .reading, let mostRecentPage {
                 pageFrom = String(mostRecentPage)
             }
