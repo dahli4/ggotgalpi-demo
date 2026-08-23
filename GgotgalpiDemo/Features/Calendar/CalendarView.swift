@@ -226,13 +226,6 @@ struct CalendarView: View {
 
     private var inlineSearchField: some View {
         HStack(spacing: 6) {
-            TextField("책, 감상문, 연도 또는 월", text: $searchQuery)
-                .textFieldStyle(.plain)
-                .font(.subheadline)
-                .focused($isSearchFieldFocused)
-                .submitLabel(.search)
-                .frame(maxWidth: .infinity)
-
             if !searchQuery.isEmpty {
                 Button {
                     searchQuery = ""
@@ -244,6 +237,14 @@ struct CalendarView: View {
                 .buttonStyle(.plain)
                 .accessibilityLabel("검색어 지우기")
             }
+
+            TextField("책, 감상문, 연도 또는 월", text: $searchQuery)
+                .textFieldStyle(.plain)
+                .font(.subheadline)
+                .focused($isSearchFieldFocused)
+                .submitLabel(.search)
+                .frame(maxWidth: .infinity)
+
         }
         .padding(.horizontal, GgotgalpiTheme.Spacing.control)
         .frame(maxWidth: .infinity)
@@ -477,10 +478,12 @@ private struct CalendarDayEntriesSheet: View {
             .navigationTitle(date.formatted(.dateTime.month().day().weekday(.wide).locale(Locale(identifier: "ko_KR"))))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    if editMode == .active {
+                if editMode == .active {
+                    ToolbarItem(placement: .topBarTrailing) {
                         Button("정렬 완료") { editMode = .inactive }
-                    } else {
+                    }
+                } else {
+                    ToolbarItem(placement: .topBarLeading) {
                         Button("닫기") { dismiss() }
                     }
                 }

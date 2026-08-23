@@ -120,29 +120,22 @@ struct BookshelfView: View {
     }
 
     private var bookshelfSearchButton: some View {
-            Button {
-                if isSearchExpanded {
-                    closeSearch()
-                } else {
-                    openSearch()
-                }
-            } label: {
-                Image(systemName: "magnifyingglass")
-                    .frame(width: 40, height: 40)
+        Button {
+            if isSearchExpanded {
+                closeSearch()
+            } else {
+                openSearch()
             }
-            .buttonStyle(.plain)
-            .accessibilityLabel(isSearchExpanded ? "검색 닫기" : "통합 검색")
+        } label: {
+            Image(systemName: "magnifyingglass")
+                .frame(width: 40, height: 40)
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(isSearchExpanded ? "검색 닫기" : "통합 검색")
     }
 
     private var bookshelfSearchField: some View {
         HStack(spacing: 6) {
-            TextField("책, 감상문, 연도 또는 월", text: $searchQuery)
-                .textFieldStyle(.plain)
-                .font(.subheadline)
-                .focused($isSearchFieldFocused)
-                .submitLabel(.search)
-                .frame(maxWidth: .infinity)
-
             if !searchQuery.isEmpty {
                 Button {
                     searchQuery = ""
@@ -154,6 +147,14 @@ struct BookshelfView: View {
                 .buttonStyle(.plain)
                 .accessibilityLabel("검색어 지우기")
             }
+
+            TextField("책, 감상문, 연도 또는 월", text: $searchQuery)
+                .textFieldStyle(.plain)
+                .font(.subheadline)
+                .focused($isSearchFieldFocused)
+                .submitLabel(.search)
+                .frame(maxWidth: .infinity)
+
         }
         .padding(.horizontal, GgotgalpiTheme.Spacing.control)
         .frame(maxWidth: .infinity)
