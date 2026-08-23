@@ -6,7 +6,9 @@ struct BookshelfView: View {
     @State private var selectedCategory: BookCategory = .all
     @State private var showingAddBook = false
     @State private var selectedBook: Book?
-    @State private var isShowingSearch = false
+    @State private var isSearchExpanded = false
+    @State private var searchQuery = ""
+    @FocusState private var isSearchFieldFocused: Bool
 
     private var visibleBooks: [Book] {
         store.books.filter { book in
@@ -20,6 +22,11 @@ struct BookshelfView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: GgotgalpiTheme.Spacing.section) {
+                    if isSearchExpanded {
+                        InlineUnifiedSearchView(query: $searchQuery)
+                            .transition(.move(edge: .top).combined(with: .opacity))
+                    }
+
                     ReadingStatusPicker(selection: $selectedReadingStatus)
                     CategoryUnderlineTabs(selection: $selectedCategory)
                     SectionLabel(title: "나의 책장")
@@ -43,25 +50,18 @@ struct BookshelfView: View {
                 .padding(.vertical, GgotgalpiTheme.Spacing.content)
             }
             .scrollIndicators(.hidden)
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        isShowingSearch = true
-                    } label: {
-                        Image(systemName: "magnifyingglass")
-                            .foregroundStyle(GgotgalpiTheme.ink)
-                    }
-                    .accessibilityLabel("통합 검색")
-                }
+            // 툴바 슬롯의 고정 폭을 쓰지 않고, 화면의 좌우 여백 안에서 검색창을 직접 배치합니다.
+            .safeAreaPadding(.top, 40)
+            .overlay(alignment: .top) {
+                bookshelfSearchControl
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+                    .padding(.horizontal, GgotgalpiTheme.Spacing.screen)
             }
             .sheet(isPresented: $showingAddBook) {
                 AddBookView()
             }
             .sheet(item: $selectedBook) { book in
                 BookDetailView(book: book)
-            }
-            .sheet(isPresented: $isShowingSearch) {
-                UnifiedSearchView()
             }
             .overlay(alignment: .bottomTrailing) {
                 Button {
@@ -83,6 +83,82 @@ struct BookshelfView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .paperBackground()
+    }
+
+    private var bookshelfSearchControl: some View {
+        Group {
+            if isSearchExpanded {
+                HStack(spacing: 0) {
+                    bookshelfSearchField
+                        .layoutPriority(1)
+
+                    bookshelfSearchButton
+                }
+                .frame(maxWidth: .infinity, minHeight: 40, maxHeight: 40)
+            } else {
+                bookshelfSearchButton
+            }
+        }
+        .foregroundStyle(GgotgalpiTheme.ink)
+        .background(Color.white.opacity(0.82), in: Capsule())
+        .animation(.easeInOut(duration: 0.24), value: isSearchExpanded)
+    }
+
+    private var bookshelfSearchButton: some View {
+            Button {
+                if isSearchExpanded {
+                    closeSearch()
+                } else {
+                    openSearch()
+                }
+            } label: {
+                Image(systemName: "magnifyingglass")
+                    .frame(width: 40, height: 40)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(isSearchExpanded ? "검색 닫기" : "통합 검색")
+    }
+
+    private var bookshelfSearchField: some View {
+        HStack(spacing: 6) {
+            TextField("책, 감상문, 연도 또는 월", text: $searchQuery)
+                .textFieldStyle(.plain)
+                .font(.subheadline)
+                .focused($isSearchFieldFocused)
+                .submitLabel(.search)
+                .frame(maxWidth: .infinity)
+
+            if !searchQuery.isEmpty {
+                Button {
+                    searchQuery = ""
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.caption)
+                        .foregroundStyle(GgotgalpiTheme.secondaryInk)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("검색어 지우기")
+            }
+        }
+        .padding(.horizontal, GgotgalpiTheme.Spacing.control)
+        .frame(maxWidth: .infinity)
+        .frame(height: 40)
+        .transition(.scale(scale: 0.1, anchor: .trailing).combined(with: .opacity))
+    }
+
+    private func openSearch() {
+        withAnimation(.easeInOut(duration: 0.24)) {
+            isSearchExpanded = true
+        }
+        isSearchFieldFocused = true
+    }
+
+    private func closeSearch() {
+        isSearchFieldFocused = false
+        withAnimation(.easeInOut(duration: 0.24)) {
+            isSearchExpanded = false
+        }
+        searchQuery = ""
     }
 }
 

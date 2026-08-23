@@ -101,11 +101,11 @@ struct CalendarView: View {
             // 달력 카드와 안전 영역을 같은 웜 베이지로 이어 화면 전체가 한 장처럼 보이게 합니다.
             .background(GgotgalpiTheme.paper)
             .overlay(alignment: .top) {
-                ZStack(alignment: .topTrailing) {
-                    calendarActions
-                }
-                .frame(maxWidth: .infinity, alignment: .topTrailing)
-                .padding(.horizontal, GgotgalpiTheme.Spacing.screen)
+                calendarActions
+                    // 확장된 캡슐은 이 여백 안의 전체 폭을 사용합니다.
+                    // 따라서 leading / trailing 여백은 항상 동일합니다.
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+                    .padding(.horizontal, GgotgalpiTheme.Spacing.screen)
             }
         }
         .background(GgotgalpiTheme.paper.ignoresSafeArea())
@@ -135,34 +135,47 @@ struct CalendarView: View {
     }
 
     private var calendarActions: some View {
-        HStack(spacing: 0) {
+        Group {
             if isSearchExpanded {
-                inlineSearchField
-            }
+                HStack(spacing: 0) {
+                    inlineSearchField
+                        // 아이콘 영역만 고정하고, 입력 필드는 남은 폭 전체를 차지합니다.
+                        .layoutPriority(1)
 
-            HStack(spacing: GgotgalpiTheme.Spacing.compact) {
-                if hasActiveFilter {
-                    Button {
-                        isShowingFilters = true
-                    } label: {
-                        Text(filterSummary)
-                            .font(.caption.weight(.medium))
-                            .lineLimit(1)
-                            // 아이콘 버튼의 내부 여백과 맞춰, 선택된 필터도 캡슐 안에서 균형 있게 보이게 합니다.
-                            .padding(.leading, GgotgalpiTheme.Spacing.control)
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel("적용된 필터: \(filterSummary)")
+                    calendarActionIcons
                 }
+                .frame(maxWidth: .infinity, minHeight: 40, maxHeight: 40)
+            } else {
+                HStack(spacing: GgotgalpiTheme.Spacing.compact) {
+                    if hasActiveFilter {
+                        Button {
+                            isShowingFilters = true
+                        } label: {
+                            Text(filterSummary)
+                                .font(.caption.weight(.medium))
+                                .lineLimit(1)
+                                // 아이콘 버튼의 내부 여백과 맞춰, 선택된 필터도 캡슐 안에서 균형 있게 보이게 합니다.
+                                .padding(.leading, GgotgalpiTheme.Spacing.control)
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("적용된 필터: \(filterSummary)")
+                    }
 
-                filterButton
-                searchButton
+                    calendarActionIcons
+                }
+                .frame(height: 40)
             }
         }
         .foregroundStyle(GgotgalpiTheme.ink)
-        .frame(maxWidth: isSearchExpanded ? .infinity : nil, alignment: .trailing)
         .background(Color.white.opacity(0.82), in: Capsule())
         .animation(.easeInOut(duration: 0.24), value: isSearchExpanded)
+    }
+
+    private var calendarActionIcons: some View {
+        HStack(spacing: GgotgalpiTheme.Spacing.compact) {
+            filterButton
+            searchButton
+        }
     }
 
     private var filterButton: some View {
