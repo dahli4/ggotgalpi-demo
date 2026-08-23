@@ -401,6 +401,7 @@ private struct CalendarDayEntriesSheet: View {
     @State private var books: [Book]
     @State private var editMode: EditMode = .inactive
     @State private var editingEntry: CalendarDayEntryEditRequest?
+    @State private var showingAddBook = false
 
     let date: Date
     let entries: [ReadingEntry]
@@ -490,6 +491,27 @@ private struct CalendarDayEntriesSheet: View {
             }
             .sheet(item: $editingEntry) { request in
                 AddReadingEntryView(book: request.book, editingEntry: request.entry)
+            }
+            .sheet(isPresented: $showingAddBook) {
+                AddBookView()
+            }
+            .overlay(alignment: .bottomTrailing) {
+                if entries.isEmpty {
+                    Button {
+                        showingAddBook = true
+                    } label: {
+                        Image(systemName: "plus")
+                            .font(.title3.weight(.semibold))
+                            .foregroundStyle(GgotgalpiTheme.paper)
+                            .frame(width: 52, height: 52)
+                            .background(GgotgalpiTheme.accent)
+                            .clipShape(Circle())
+                            .shadow(color: .black.opacity(0.14), radius: 8, y: 4)
+                    }
+                    .accessibilityLabel("새 책 등록")
+                    .padding(.trailing, GgotgalpiTheme.Spacing.screen)
+                    .padding(.bottom, GgotgalpiTheme.Spacing.content)
+                }
             }
         }
         .paperBackground()
@@ -679,16 +701,28 @@ private struct CalendarDayCell: View {
         ZStack(alignment: .topLeading) {
             if let date {
                 if books.isEmpty {
-                    Button {
-                        select(date)
-                    } label: {
+                    GeometryReader { proxy in
+                        Button {
+                            select(date)
+                        } label: {
+                            Text(date.formatted(.dateTime.day()))
+                                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                                .contentShape(Rectangle())
+                                // 보이는 날짜 숫자는 아래에 별도로 배치하고, 이 레이블은 넓은 탭 영역만 담당합니다.
+                                .opacity(0.001)
+                        }
+                        .buttonStyle(.plain)
+                        // 빈 날짜는 셀 중앙 기준 가로·세로 80%를 탭 영역으로 사용합니다.
+                        .frame(width: proxy.size.width * 0.8, height: proxy.size.height * 0.8)
+                        .position(x: proxy.size.width / 2, y: proxy.size.height / 2)
+                        .accessibilityLabel(date.shortKoreanDate)
+
                         Text(date.formatted(.dateTime.day()))
                             .font(.subheadline.weight(isSelected ? .bold : .regular))
                             .foregroundStyle(GgotgalpiTheme.ink)
+                            .padding(8)
+                            .allowsHitTesting(false)
                     }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel(date.shortKoreanDate)
-                    .padding(8)
                 } else {
                     CalendarBookCoverStack(books: books, date: date, isSelected: isSelected)
                         .contentShape(Rectangle())
