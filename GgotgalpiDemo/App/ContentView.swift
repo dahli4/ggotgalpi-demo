@@ -8,7 +8,7 @@ struct ContentView: View {
     @State private var selectedTab: Tab = .calendar
     @State private var interactiveOffset: CGFloat = 0
     @State private var isInteractiveSwipe = false
-    @Namespace private var tabSelectionNamespace
+    @Namespace private var dockGlassNamespace
 
     private let edgeActivationWidth: CGFloat = 28
     private let completionRatio: CGFloat = 0.30
@@ -119,68 +119,65 @@ struct ContentView: View {
             .padding(.bottom, -8)
     }
 
+    @ViewBuilder
     private var tabDockSurface: some View {
-        // 외곽 글라스 쉘은 제거하고, 선택 캡슐의 시스템 전환 효과만 남깁니다.
-        tabDockContents
+        if #available(iOS 26.0, *) {
+            ZStack(alignment: .leading) {
+                GlassEffectContainer(spacing: 0) {
+                    ZStack(alignment: .leading) {
+                        Capsule()
+                            .fill(.clear)
+                            .glassEffect(.clear.interactive(), in: Capsule())
+                            .allowsHitTesting(false)
+
+                        dockSelectionGlass
+                    }
+                    .frame(width: 152, height: 44)
+                }
+
+                // 글라스 합성과 분리해 아이콘·글자가 굴절되거나 흐려지지 않게 합니다.
+                tabDockContents
+            }
+            .frame(width: 152, height: 44)
+        } else {
+            tabDockContents
+                .background(.ultraThinMaterial, in: Capsule())
+        }
     }
 
     private var tabDockContents: some View {
-        Group {
-            if #available(iOS 26.0, *) {
-                GlassEffectContainer(spacing: 0) {
-                    ZStack(alignment: .leading) {
-                        tabSelectionGlass
-                            .frame(width: 73, height: 38)
-                            .offset(x: selectedTab == .calendar ? 3 : 76)
-                            .allowsHitTesting(false)
-                            .animation(.spring(response: 0.42, dampingFraction: 0.94), value: selectedTab)
-
-                        tabDockButtons
-                    }
-                    .glassEffect(.clear.interactive(), in: Capsule())
-                    .glassEffectID("dock-surface", in: tabSelectionNamespace)
-                }
-            } else {
-                tabDockButtons
-                    .background(.ultraThinMaterial, in: Capsule())
-            }
+        HStack(spacing: 0) {
+            dockTabButton(title: "달력", symbol: "calendar", tab: .calendar)
+            dockTabButton(title: "책장", symbol: "books.vertical", tab: .bookshelf)
         }
         .frame(width: 152, height: 44)
     }
 
-    private var tabDockButtons: some View {
-        HStack(spacing: 0) {
-            tabDockButton(title: "달력", symbol: "calendar", tab: .calendar)
-            tabDockButton(title: "책장", symbol: "books.vertical", tab: .bookshelf)
+    @ViewBuilder
+    private var dockSelectionGlass: some View {
+        if #available(iOS 26.0, *) {
+            Capsule()
+                .fill(.clear)
+                .glassEffect(.clear.interactive(), in: Capsule())
+                .frame(width: 73, height: 38)
+                .offset(x: selectedTab == .calendar ? 3 : 76)
+                .matchedGeometryEffect(id: "dock-selection", in: dockGlassNamespace)
+                .glassEffectID("dock-selection", in: dockGlassNamespace)
+                .glassEffectTransition(.matchedGeometry)
+                .allowsHitTesting(false)
         }
-        .padding(3)
     }
 
-    private func tabDockButton(title: String, symbol: String, tab: Tab) -> some View {
-        let isSelected = selectedTab == tab
-
-        return Button {
+    private func dockTabButton(title: String, symbol: String, tab: Tab) -> some View {
+        Button {
             activateTab(tab)
         } label: {
-            tabPickerLabel(title: title, symbol: symbol, isSelected: isSelected)
-                .frame(width: 73, height: 38)
+            tabPickerLabel(title: title, symbol: symbol, isSelected: selectedTab == tab)
+                .frame(width: 76, height: 44)
                 .contentShape(Capsule())
         }
         .buttonStyle(.plain)
         .accessibilityLabel(title)
-    }
-
-    @ViewBuilder
-    private var tabSelectionGlass: some View {
-        if #available(iOS 26.0, *) {
-            Capsule()
-                .fill(.clear)
-                .glassEffect(.regular.interactive(), in: Capsule())
-                .glassEffectID("dock-selection", in: tabSelectionNamespace)
-        } else {
-            Capsule()
-                .fill(.ultraThinMaterial)
-        }
     }
 
     private func tabPickerLabel(title: String, symbol: String, isSelected: Bool) -> some View {
@@ -194,11 +191,11 @@ struct ContentView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
-    /// 선택 캡슐만 매끄럽게 이동시켜 전환 뒤의 튕김은 만들지 않습니다.
+    /// 투명 글라스 선택 캡슐을 다른 탭으로 부드럽게 이동시킵니다.
     private func activateTab(_ tab: Tab) {
         guard selectedTab != tab else { return }
 
-        withAnimation(.spring(response: 0.42, dampingFraction: 0.94)) {
+        withAnimation(.easeInOut(duration: 0.32)) {
             selectedTab = tab
             interactiveOffset = 0
         }
