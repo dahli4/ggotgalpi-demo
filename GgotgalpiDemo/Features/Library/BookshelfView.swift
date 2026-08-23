@@ -18,6 +18,10 @@ struct BookshelfView: View {
         }
     }
 
+    private var hasSearchTerm: Bool {
+        !searchQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -27,21 +31,23 @@ struct BookshelfView: View {
                             .transition(.move(edge: .top).combined(with: .opacity))
                     }
 
-                    ReadingStatusPicker(selection: $selectedReadingStatus)
-                    CategoryUnderlineTabs(selection: $selectedCategory)
-                    SectionLabel(title: "나의 책장")
+                    if !hasSearchTerm {
+                        ReadingStatusPicker(selection: $selectedReadingStatus)
+                        CategoryUnderlineTabs(selection: $selectedCategory)
+                        SectionLabel(title: "나의 책장")
 
-                    LazyVStack(spacing: 0) {
-                        ForEach(visibleBooks) { book in
-                            Button {
-                                selectedBook = book
-                            } label: {
-                                BookCard(book: book, entryCount: store.entries(for: book.id).count)
-                            }
-                            .buttonStyle(.plain)
+                        LazyVStack(spacing: 0) {
+                            ForEach(visibleBooks) { book in
+                                Button {
+                                    selectedBook = book
+                                } label: {
+                                    BookCard(book: book, entryCount: store.entries(for: book.id).count)
+                                }
+                                .buttonStyle(.plain)
 
-                            if book.id != visibleBooks.last?.id {
-                                DividerLine()
+                                if book.id != visibleBooks.last?.id {
+                                    DividerLine()
+                                }
                             }
                         }
                     }

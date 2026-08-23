@@ -41,6 +41,10 @@ struct CalendarView: View {
         selectedReadingStatus != .all || selectedCategory != .all
     }
 
+    private var hasSearchTerm: Bool {
+        !searchQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
     private var filterSummary: String {
         [
             selectedReadingStatus == .all ? nil : selectedReadingStatus.rawValue,
@@ -70,26 +74,28 @@ struct CalendarView: View {
                             .transition(.move(edge: .top).combined(with: .opacity))
                     }
 
-                    MonthlyCalendarGrid(
-                        displayedMonth: $displayedMonth,
-                        selectedDate: $selectedDate,
-                        books: { books(on: $0) },
-                        selectDate: { date in
-                            selectedDate = date
-                            isShowingDayEntries = true
-                        },
-                        requestReorder: { date in
-                            let books = books(on: date)
-                            guard books.count > 1 else { return }
-                            reorderRequest = CalendarBookReorderRequest(date: date, books: books)
-                        }
-                    )
+                    if !hasSearchTerm {
+                        MonthlyCalendarGrid(
+                            displayedMonth: $displayedMonth,
+                            selectedDate: $selectedDate,
+                            books: { books(on: $0) },
+                            selectDate: { date in
+                                selectedDate = date
+                                isShowingDayEntries = true
+                            },
+                            requestReorder: { date in
+                                let books = books(on: date)
+                                guard books.count > 1 else { return }
+                                reorderRequest = CalendarBookReorderRequest(date: date, books: books)
+                            }
+                        )
 
-                    CalendarMonthlySummary(
-                        entries: monthlyEntries,
-                        latestEntry: mostRecentMonthlyEntry,
-                        latestBook: mostRecentMonthlyEntry.flatMap { store.book(for: $0.bookID) }
-                    )
+                        CalendarMonthlySummary(
+                            entries: monthlyEntries,
+                            latestEntry: mostRecentMonthlyEntry,
+                            latestBook: mostRecentMonthlyEntry.flatMap { store.book(for: $0.bookID) }
+                        )
+                    }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal, GgotgalpiTheme.Spacing.screen)
