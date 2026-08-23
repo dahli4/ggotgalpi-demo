@@ -2,6 +2,7 @@ import SwiftUI
 
 struct CalendarView: View {
     @EnvironmentObject private var store: DemoStore
+    let searchResetID: Int
     @State private var selectedDate = Calendar.current.startOfDay(for: Date())
     @State private var displayedMonth = Calendar.current.startOfMonth(for: Date())
     @State private var selectedReadingStatus: ReadingStatus = .all
@@ -17,6 +18,11 @@ struct CalendarView: View {
         guard let book = store.book(for: entry.bookID), !book.isHiddenFromCalendar else {
             return false
         }
+        return matchesCalendarFilters(book)
+    }
+
+    private func matchesCalendarFilters(_ book: Book) -> Bool {
+        guard !book.isHiddenFromCalendar else { return false }
         let matchesStatus = selectedReadingStatus == .all || book.readingStatus == selectedReadingStatus
         let matchesCategory = selectedCategory == .all || book.category == selectedCategory
         return matchesStatus && matchesCategory
@@ -70,7 +76,10 @@ struct CalendarView: View {
                 ScrollView {
                     VStack(alignment: .leading, spacing: GgotgalpiTheme.Spacing.section) {
                     if isSearchExpanded {
-                        InlineUnifiedSearchView(query: $searchQuery)
+                        InlineUnifiedSearchView(
+                            query: $searchQuery,
+                            bookMatchesFilter: matchesCalendarFilters
+                        )
                             .transition(.move(edge: .top).combined(with: .opacity))
                     }
 
@@ -116,6 +125,9 @@ struct CalendarView: View {
         }
         .background(GgotgalpiTheme.paper.ignoresSafeArea())
         .tint(GgotgalpiTheme.accent)
+        .onChange(of: searchResetID) {
+            closeSearch()
+        }
         .sheet(item: $reorderRequest) { request in
             CalendarBookOrderEditor(date: request.date, books: request.books) { bookIDs in
                 store.saveCalendarBookOrder(bookIDs, for: request.date)
@@ -387,6 +399,7 @@ private struct CalendarDayEntriesSheet: View {
     @EnvironmentObject private var store: DemoStore
     @State private var books: [Book]
     @State private var editMode: EditMode = .inactive
+    @State private var editingEntry: CalendarDayEntryEditRequest?
 
     let date: Date
     let entries: [ReadingEntry]
@@ -435,9 +448,16 @@ private struct CalendarDayEntriesSheet: View {
                         }
                     }
 
-                    Section {
+                        Section {
                         ForEach(books) { book in
-                            CalendarDayBookEntryRow(book: book, entries: entries(for: book))
+                            CalendarDayBookEntryRow(
+                                book: book,
+                                entries: entries(for: book),
+                                editEntry: { entry in
+                                    guard editMode != .active else { return }
+                                    editingEntry = CalendarDayEntryEditRequest(book: book, entry: entry)
+                                }
+                            )
                                 .contentShape(Rectangle())
                                 .onLongPressGesture(minimumDuration: 0.45) {
                                     guard canReorder else { return }
@@ -465,14 +485,25 @@ private struct CalendarDayEntriesSheet: View {
                     }
                 }
             }
+            .sheet(item: $editingEntry) { request in
+                AddReadingEntryView(book: request.book, editingEntry: request.entry)
+            }
         }
         .paperBackground()
     }
 }
 
+private struct CalendarDayEntryEditRequest: Identifiable {
+    let book: Book
+    let entry: ReadingEntry
+
+    var id: UUID { entry.id }
+}
+
 private struct CalendarDayBookEntryRow: View {
     let book: Book
     let entries: [ReadingEntry]
+    let editEntry: (ReadingEntry) -> Void
 
     var body: some View {
         HStack(alignment: .top, spacing: GgotgalpiTheme.Spacing.control) {
@@ -484,23 +515,29 @@ private struct CalendarDayBookEntryRow: View {
                     .foregroundStyle(GgotgalpiTheme.ink)
 
                 ForEach(entries) { entry in
-                    VStack(alignment: .leading, spacing: 4) {
-                        HStack(alignment: .firstTextBaseline) {
-                            Text("p.\(entry.pageFrom)-\(entry.pageTo)")
-                                .font(.caption)
-                                .foregroundStyle(GgotgalpiTheme.secondaryInk)
-                            Spacer()
-                            Text("\(entry.readingRound)회독")
-                                .font(.caption)
-                                .foregroundStyle(GgotgalpiTheme.secondaryInk)
-                        }
+                    Button {
+                        editEntry(entry)
+                    } label: {
+                        VStack(alignment: .leading, spacing: 4) {
+                            HStack(alignment: .firstTextBaseline) {
+                                Text("p.\(entry.pageFrom)-\(entry.pageTo)")
+                                    .font(.caption)
+                                    .foregroundStyle(GgotgalpiTheme.secondaryInk)
+                                Spacer()
+                                Text("\(entry.readingRound)회독")
+                                    .font(.caption)
+                                    .foregroundStyle(GgotgalpiTheme.secondaryInk)
+                            }
 
-                        Text(entry.note)
-                            .font(.body)
-                            .foregroundStyle(GgotgalpiTheme.ink)
-                            .lineSpacing(4)
-                            .fixedSize(horizontal: false, vertical: true)
+                            Text(entry.note)
+                                .font(.body)
+                                .foregroundStyle(GgotgalpiTheme.ink)
+                                .lineSpacing(4)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
                     }
+                    .buttonStyle(.plain)
+                    .accessibilityHint("감상 기록 수정")
 
                     if entry.id != entries.last?.id {
                         Divider()

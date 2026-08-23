@@ -127,7 +127,11 @@ private struct UnifiedSearchSnapshot {
     let matchingBooks: [Book]
     let entryMonthGroups: [SearchEntryMonthGroup]
 
-    init(query: String, store: DemoStore) {
+    init(
+        query: String,
+        store: DemoStore,
+        bookMatchesFilter: (Book) -> Bool = { _ in true }
+    ) {
         let calendar = Calendar.current
         let normalizedQuery = query.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         let dateFilter = Self.makeDateFilter(from: normalizedQuery)
@@ -147,8 +151,9 @@ private struct UnifiedSearchSnapshot {
         }
 
         func matches(entry: ReadingEntry) -> Bool {
-            guard !textQuery.isEmpty else { return true }
             guard let book = store.book(for: entry.bookID) else { return false }
+            guard bookMatchesFilter(book) else { return false }
+            guard !textQuery.isEmpty else { return true }
             let searchableText = [book.title, book.author, entry.note]
                 .joined(separator: " ")
             return matchesSearchText(searchableText)
@@ -164,9 +169,9 @@ private struct UnifiedSearchSnapshot {
         let matchingBooks: [Book]
         if dateFilter != nil {
             let bookIDs = Set(matchingEntries.map(\.bookID))
-            matchingBooks = store.books.filter { bookIDs.contains($0.id) }
+            matchingBooks = store.books.filter { bookIDs.contains($0.id) && bookMatchesFilter($0) }
         } else {
-            matchingBooks = store.books.filter(matches(book:))
+            matchingBooks = store.books.filter { bookMatchesFilter($0) && matches(book: $0) }
         }
 
         let groupedEntries = Dictionary(grouping: matchingEntries) { entry in
@@ -230,11 +235,24 @@ private struct UnifiedSearchSnapshot {
 struct InlineUnifiedSearchView: View {
     @EnvironmentObject private var store: DemoStore
     @Binding var query: String
+    private let bookMatchesFilter: (Book) -> Bool
     @State private var selectedBook: Book?
     @State private var showingAddBook = false
 
+    init(
+        query: Binding<String>,
+        bookMatchesFilter: @escaping (Book) -> Bool = { _ in true }
+    ) {
+        _query = query
+        self.bookMatchesFilter = bookMatchesFilter
+    }
+
     private var snapshot: UnifiedSearchSnapshot {
-        UnifiedSearchSnapshot(query: query, store: store)
+        UnifiedSearchSnapshot(
+            query: query,
+            store: store,
+            bookMatchesFilter: bookMatchesFilter
+        )
     }
 
     var body: some View {

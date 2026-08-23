@@ -8,6 +8,8 @@ struct ContentView: View {
     @State private var selectedTab: Tab = .calendar
     @State private var interactiveOffset: CGFloat = 0
     @State private var isInteractiveSwipe = false
+    @State private var calendarSearchResetID = 0
+    @State private var bookshelfSearchResetID = 0
     @Namespace private var dockGlassNamespace
 
     private let edgeActivationWidth: CGFloat = 28
@@ -22,11 +24,11 @@ struct ContentView: View {
                 let pageWidth = proxy.size.width
 
                 ZStack {
-                    CalendarView()
+                    CalendarView(searchResetID: calendarSearchResetID)
                         .frame(width: proxy.size.width, height: proxy.size.height)
                         .offset(x: calendarOffset(pageWidth: pageWidth))
 
-                    BookshelfView()
+                    BookshelfView(searchResetID: bookshelfSearchResetID)
                         .frame(width: proxy.size.width, height: proxy.size.height)
                         .offset(x: bookshelfOffset(pageWidth: pageWidth))
                 }
@@ -209,7 +211,15 @@ struct ContentView: View {
 
     /// 투명 글라스 선택 캡슐을 다른 탭으로 부드럽게 이동시킵니다.
     private func activateTab(_ tab: Tab) {
-        guard selectedTab != tab else { return }
+        guard selectedTab != tab else {
+            switch tab {
+            case .calendar:
+                calendarSearchResetID += 1
+            case .bookshelf:
+                bookshelfSearchResetID += 1
+            }
+            return
+        }
 
         withAnimation(.easeInOut(duration: 0.32)) {
             selectedTab = tab

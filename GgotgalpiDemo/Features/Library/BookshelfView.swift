@@ -2,6 +2,7 @@ import SwiftUI
 
 struct BookshelfView: View {
     @EnvironmentObject private var store: DemoStore
+    let searchResetID: Int
     @State private var selectedReadingStatus: ReadingStatus = .all
     @State private var selectedCategory: BookCategory = .all
     @State private var showingAddBook = false
@@ -11,11 +12,13 @@ struct BookshelfView: View {
     @FocusState private var isSearchFieldFocused: Bool
 
     private var visibleBooks: [Book] {
-        store.books.filter { book in
-            let matchesStatus = selectedReadingStatus == .all || book.readingStatus == selectedReadingStatus
-            let matchesCategory = selectedCategory == .all || book.category == selectedCategory
-            return matchesStatus && matchesCategory
-        }
+        store.books.filter(matchesBookshelfFilters)
+    }
+
+    private func matchesBookshelfFilters(_ book: Book) -> Bool {
+        let matchesStatus = selectedReadingStatus == .all || book.readingStatus == selectedReadingStatus
+        let matchesCategory = selectedCategory == .all || book.category == selectedCategory
+        return matchesStatus && matchesCategory
     }
 
     private var hasSearchTerm: Bool {
@@ -27,7 +30,10 @@ struct BookshelfView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: GgotgalpiTheme.Spacing.section) {
                     if isSearchExpanded {
-                        InlineUnifiedSearchView(query: $searchQuery)
+                        InlineUnifiedSearchView(
+                            query: $searchQuery,
+                            bookMatchesFilter: matchesBookshelfFilters
+                        )
                             .transition(.move(edge: .top).combined(with: .opacity))
                     }
 
@@ -89,6 +95,9 @@ struct BookshelfView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .paperBackground()
+        .onChange(of: searchResetID) {
+            closeSearch()
+        }
     }
 
     private var bookshelfSearchControl: some View {
