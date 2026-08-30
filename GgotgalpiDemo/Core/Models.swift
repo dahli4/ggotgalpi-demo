@@ -1,4 +1,5 @@
 import Foundation
+import SwiftData
 import SwiftUI
 
 enum BookCategory: String, CaseIterable, Identifiable {
@@ -10,7 +11,6 @@ enum BookCategory: String, CaseIterable, Identifiable {
     var id: String { rawValue }
 }
 
-/// 책장의 첫 번째 분류 기준입니다. 상태를 먼저 고르고, 그 안에서 장르를 다시 고릅니다.
 enum ReadingStatus: String, CaseIterable, Identifiable {
     case all = "모두"
     case wantToRead = "보고 싶은"
@@ -20,15 +20,31 @@ enum ReadingStatus: String, CaseIterable, Identifiable {
     var id: String { rawValue }
 }
 
-struct Book: Identifiable, Hashable {
-    let id: UUID
+@Model
+final class Book {
+    @Attribute(.unique) var id: UUID
     var title: String
     var author: String
     var publisher: String
-    var category: BookCategory
-    var readingStatus: ReadingStatus
-    var coverColor: Color
+    private var categoryRawValue: String
+    private var readingStatusRawValue: String
+    private var coverColorIndex: Int
     var isHiddenFromCalendar: Bool
+    @Relationship(deleteRule: .cascade, inverse: \ReadingEntry.book) var entries: [ReadingEntry] = []
+
+    var category: BookCategory {
+        get { BookCategory(rawValue: categoryRawValue) ?? .literature }
+        set { categoryRawValue = newValue.rawValue }
+    }
+
+    var readingStatus: ReadingStatus {
+        get { ReadingStatus(rawValue: readingStatusRawValue) ?? .wantToRead }
+        set { readingStatusRawValue = newValue.rawValue }
+    }
+
+    var coverColor: Color {
+        Self.coverColors[coverColorIndex % Self.coverColors.count]
+    }
 
     init(
         id: UUID = UUID(),
@@ -37,35 +53,42 @@ struct Book: Identifiable, Hashable {
         publisher: String = "",
         category: BookCategory,
         readingStatus: ReadingStatus = .wantToRead,
-        coverColor: Color,
+        coverColorIndex: Int = 0,
         isHiddenFromCalendar: Bool = false
     ) {
         self.id = id
         self.title = title
         self.author = author
         self.publisher = publisher
-        self.category = category
-        self.readingStatus = readingStatus
-        self.coverColor = coverColor
+        self.categoryRawValue = category.rawValue
+        self.readingStatusRawValue = readingStatus.rawValue
+        self.coverColorIndex = coverColorIndex
         self.isHiddenFromCalendar = isHiddenFromCalendar
     }
+
+    private static let coverColors: [Color] = [
+        Color(red: 0.55, green: 0.65, blue: 0.61),
+        Color(red: 0.66, green: 0.56, blue: 0.45),
+        Color(red: 0.42, green: 0.48, blue: 0.58)
+    ]
 }
 
-struct ReadingEntry: Identifiable, Hashable {
-    let id: UUID
-    let bookID: UUID
+@Model
+final class ReadingEntry {
+    @Attribute(.unique) var id: UUID
+    var bookID: UUID
     var date: Date
-    /// 같은 날짜 안에서 표지의 기본 앞뒤 순서를 정하는 감상 작성 시각입니다.
     var createdAt: Date
     var pageFrom: Int
     var pageTo: Int
     var note: String
     var favoriteSentence: String
     var readingRound: Int
+    var book: Book?
 
     init(
         id: UUID = UUID(),
-        bookID: UUID,
+        book: Book,
         date: Date,
         createdAt: Date = Date(),
         pageFrom: Int,
@@ -75,7 +98,8 @@ struct ReadingEntry: Identifiable, Hashable {
         readingRound: Int
     ) {
         self.id = id
-        self.bookID = bookID
+        self.bookID = book.id
+        self.book = book
         self.date = date
         self.createdAt = createdAt
         self.pageFrom = pageFrom
@@ -88,58 +112,21 @@ struct ReadingEntry: Identifiable, Hashable {
 
 @MainActor
 final class DemoStore: ObservableObject {
-    @Published var books: [Book] = []
-    @Published var entries: [ReadingEntry] = []
+    @Published private(set) var books: [Book] = []
+    @Published private(set) var entries: [ReadingEntry] = []
     @Published private var calendarBookOrders: [String: [UUID]] = [:]
 
+    private let modelContext: ModelContext
     private let calendarBookOrdersKey = "ggotgalpi.calendar-book-orders.v1"
 
-    init() {
-        let littlePrince = Book(
-            id: UUID(uuidString: "11111111-1111-1111-1111-111111111111")!,
-            title: "어린 왕자",
-            author: "앙투안 드 생텍쥐페리",
-            category: .literature,
-            readingStatus: .reading,
-            coverColor: Color(red: 0.55, green: 0.65, blue: 0.61)
-        )
-        let quietReading = Book(
-            id: UUID(uuidString: "22222222-2222-2222-2222-222222222222")!,
-            title: "아주 작은 습관",
-            author: "제임스 클리어",
-            category: .nonfiction,
-            readingStatus: .finished,
-            coverColor: Color(red: 0.66, green: 0.56, blue: 0.45)
-        )
-        let notes = Book(
-            id: UUID(uuidString: "33333333-3333-3333-3333-333333333333")!,
-            title: "생각의 지도",
-            author: "리처드 니스벳",
-            category: .study,
-            readingStatus: .wantToRead,
-            coverColor: Color(red: 0.42, green: 0.48, blue: 0.58),
-            isHiddenFromCalendar: true
-        )
-
-        books = [littlePrince, quietReading, notes]
-
-        let calendar = Calendar.current
-        let today = calendar.startOfDay(for: Date())
-        let now = Date()
-        let august3LastYear = calendar.date(from: DateComponents(year: 2025, month: 8, day: 3)) ?? today
-        let august12LastYear = calendar.date(from: DateComponents(year: 2025, month: 8, day: 12)) ?? today
-        let august23LastYear = calendar.date(from: DateComponents(year: 2025, month: 8, day: 23)) ?? today
-        entries = [
-            ReadingEntry(bookID: littlePrince.id, date: today, createdAt: now.addingTimeInterval(-180), pageFrom: 1, pageTo: 34, note: "어른이 된다는 건 중요한 것을 잊는 일일까. 작은 별의 풍경이 오래 남았다.", readingRound: 1),
-            ReadingEntry(bookID: quietReading.id, date: today, createdAt: now, pageFrom: 24, pageTo: 58, note: "작은 행동을 반복하는 일이 결국 나를 만든다는 문장이 좋았다.", readingRound: 1),
-            ReadingEntry(bookID: littlePrince.id, date: calendar.date(byAdding: .day, value: -5, to: today) ?? today, createdAt: now.addingTimeInterval(-14_400), pageFrom: 35, pageTo: 72, note: "길들인다는 것과 관계를 맺는다는 것에 대해 생각했다.", readingRound: 1),
-            ReadingEntry(bookID: littlePrince.id, date: calendar.date(byAdding: .day, value: -7, to: today) ?? today, createdAt: now.addingTimeInterval(-28_800), pageFrom: 1, pageTo: 20, note: "두 번째로 읽으니 처음과 다른 문장이 보인다.", readingRound: 2),
-            ReadingEntry(bookID: littlePrince.id, date: august3LastYear, createdAt: august3LastYear.addingTimeInterval(36_000), pageFrom: 73, pageTo: 104, note: "여름의 끝에서 다시 읽으니 여우의 말이 더 선명하게 다가왔다.", readingRound: 0),
-            ReadingEntry(bookID: quietReading.id, date: august12LastYear, createdAt: august12LastYear.addingTimeInterval(36_000), pageFrom: 59, pageTo: 81, note: "작은 습관을 눈에 보이게 만드는 방법을 실천해 보기로 했다.", readingRound: 0),
-            ReadingEntry(bookID: littlePrince.id, date: august23LastYear, createdAt: august23LastYear.addingTimeInterval(36_000), pageFrom: 105, pageTo: 128, note: "별을 바라보는 마음을 오래 기억하고 싶다는 감상을 남겼다.", readingRound: 0)
-        ]
-
+    init(modelContext: ModelContext) {
+        self.modelContext = modelContext
         loadCalendarBookOrders()
+        refresh()
+
+        if books.isEmpty {
+            seedSampleData()
+        }
     }
 
     func book(for id: UUID) -> Book? {
@@ -147,7 +134,9 @@ final class DemoStore: ObservableObject {
     }
 
     func entries(for bookID: UUID) -> [ReadingEntry] {
-        entries.filter { $0.bookID == bookID }.sorted { $0.date > $1.date }
+        entries
+            .filter { $0.bookID == bookID }
+            .sorted { $0.date == $1.date ? $0.createdAt > $1.createdAt : $0.date > $1.date }
     }
 
     func entries(on date: Date) -> [ReadingEntry] {
@@ -156,26 +145,30 @@ final class DemoStore: ObservableObject {
     }
 
     func addBook(title: String, author: String, publisher: String = "", category: BookCategory) {
-        let colors: [Color] = [
-            Color(red: 0.57, green: 0.62, blue: 0.54),
-            Color(red: 0.64, green: 0.53, blue: 0.48),
-            Color(red: 0.48, green: 0.53, blue: 0.63)
-        ]
-        books.append(
-            Book(
-                title: title,
-                author: author,
-                publisher: publisher,
-                category: category,
-                coverColor: colors[books.count % colors.count]
-            )
+        let book = Book(
+            title: title,
+            author: author,
+            publisher: publisher,
+            category: category,
+            coverColorIndex: books.count % 3
         )
+        modelContext.insert(book)
+        saveChanges()
     }
 
-    func addEntry(bookID: UUID, date: Date, pageFrom: Int, pageTo: Int, note: String, favoriteSentence: String = "", readingRound: Int) {
-        entries.append(
+    func addEntry(
+        bookID: UUID,
+        date: Date,
+        pageFrom: Int,
+        pageTo: Int,
+        note: String,
+        favoriteSentence: String = "",
+        readingRound: Int
+    ) {
+        guard let book = book(for: bookID) else { return }
+        modelContext.insert(
             ReadingEntry(
-                bookID: bookID,
+                book: book,
                 date: date,
                 pageFrom: pageFrom,
                 pageTo: pageTo,
@@ -184,21 +177,38 @@ final class DemoStore: ObservableObject {
                 readingRound: readingRound
             )
         )
+        saveChanges()
     }
 
-    func updateEntry(id: UUID, date: Date, pageFrom: Int, pageTo: Int, note: String, favoriteSentence: String = "", readingRound: Int) {
-        guard let index = entries.firstIndex(where: { $0.id == id }) else { return }
-        entries[index].date = date
-        entries[index].pageFrom = pageFrom
-        entries[index].pageTo = pageTo
-        entries[index].note = note
-        entries[index].favoriteSentence = favoriteSentence
-        entries[index].readingRound = readingRound
+    func updateEntry(
+        id: UUID,
+        date: Date,
+        pageFrom: Int,
+        pageTo: Int,
+        note: String,
+        favoriteSentence: String = "",
+        readingRound: Int
+    ) {
+        guard let entry = entries.first(where: { $0.id == id }) else { return }
+        entry.date = date
+        entry.pageFrom = pageFrom
+        entry.pageTo = pageTo
+        entry.note = note
+        entry.favoriteSentence = favoriteSentence
+        entry.readingRound = readingRound
+        saveChanges()
+    }
+
+    func deleteEntry(id: UUID) {
+        guard let entry = entries.first(where: { $0.id == id }) else { return }
+        modelContext.delete(entry)
+        saveChanges()
     }
 
     func markBookAsFinished(id: UUID) {
-        guard let index = books.firstIndex(where: { $0.id == id }) else { return }
-        books[index].readingStatus = .finished
+        guard let book = book(for: id) else { return }
+        book.readingStatus = .finished
+        saveChanges()
     }
 
     func updateBook(
@@ -210,16 +220,24 @@ final class DemoStore: ObservableObject {
         readingStatus: ReadingStatus,
         isHiddenFromCalendar: Bool
     ) {
-        guard let index = books.firstIndex(where: { $0.id == id }) else { return }
-        books[index].title = title
-        books[index].author = author
-        books[index].publisher = publisher
-        books[index].category = category
-        books[index].readingStatus = readingStatus
-        books[index].isHiddenFromCalendar = isHiddenFromCalendar
+        guard let book = book(for: id) else { return }
+        book.title = title
+        book.author = author
+        book.publisher = publisher
+        book.category = category
+        book.readingStatus = readingStatus
+        book.isHiddenFromCalendar = isHiddenFromCalendar
+        saveChanges()
     }
 
-    /// 사용자가 정한 순서를 먼저 유지하고, 새로 생긴 작품은 그 뒤에 덧붙입니다.
+    func deleteBook(id: UUID) {
+        guard let book = book(for: id) else { return }
+        modelContext.delete(book)
+        calendarBookOrders = calendarBookOrders.mapValues { $0.filter { $0 != id } }
+        saveCalendarBookOrders()
+        saveChanges()
+    }
+
     func orderedBookIDs(for date: Date, defaultOrder: [UUID]) -> [UUID] {
         let dateKey = calendarDateKey(for: date)
         guard let savedOrder = calendarBookOrders[dateKey] else { return defaultOrder }
@@ -231,6 +249,79 @@ final class DemoStore: ObservableObject {
 
     func saveCalendarBookOrder(_ bookIDs: [UUID], for date: Date) {
         calendarBookOrders[calendarDateKey(for: date)] = bookIDs
+        saveCalendarBookOrders()
+    }
+
+    private func refresh() {
+        do {
+            books = try modelContext.fetch(FetchDescriptor<Book>())
+            entries = try modelContext.fetch(FetchDescriptor<ReadingEntry>())
+        } catch {
+            assertionFailure("SwiftData 데이터를 불러오지 못했습니다: \(error.localizedDescription)")
+            books = []
+            entries = []
+        }
+    }
+
+    private func saveChanges() {
+        do {
+            try modelContext.save()
+            refresh()
+        } catch {
+            assertionFailure("SwiftData 데이터를 저장하지 못했습니다: \(error.localizedDescription)")
+        }
+    }
+
+    private func seedSampleData() {
+        let littlePrince = Book(
+            id: UUID(uuidString: "11111111-1111-1111-1111-111111111111")!,
+            title: "어린 왕자",
+            author: "앙투안 드 생텍쥐페리",
+            category: .literature,
+            readingStatus: .reading,
+            coverColorIndex: 0
+        )
+        let quietReading = Book(
+            id: UUID(uuidString: "22222222-2222-2222-2222-222222222222")!,
+            title: "아주 작은 습관",
+            author: "제임스 클리어",
+            category: .nonfiction,
+            readingStatus: .finished,
+            coverColorIndex: 1
+        )
+        let notes = Book(
+            id: UUID(uuidString: "33333333-3333-3333-3333-333333333333")!,
+            title: "생각의 지도",
+            author: "리처드 니스벳",
+            category: .study,
+            coverColorIndex: 2,
+            isHiddenFromCalendar: true
+        )
+
+        [littlePrince, quietReading, notes].forEach(modelContext.insert)
+
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        let now = Date()
+        let august3LastYear = calendar.date(from: DateComponents(year: 2025, month: 8, day: 3)) ?? today
+        let august12LastYear = calendar.date(from: DateComponents(year: 2025, month: 8, day: 12)) ?? today
+        let august23LastYear = calendar.date(from: DateComponents(year: 2025, month: 8, day: 23)) ?? today
+
+        [
+            ReadingEntry(book: littlePrince, date: today, createdAt: now.addingTimeInterval(-180), pageFrom: 1, pageTo: 34, note: "어른이 된다는 건 중요한 것을 잊는 일일까. 작은 별의 풍경이 오래 남았다.", favoriteSentence: "가장 중요한 것은 눈에 보이지 않아.", readingRound: 1),
+            ReadingEntry(book: quietReading, date: today, createdAt: now, pageFrom: 24, pageTo: 58, note: "작은 행동을 반복하는 일이 결국 나를 만든다는 문장이 좋았다.", favoriteSentence: "매일 1퍼센트씩 나아지면 충분하다.", readingRound: 1),
+            ReadingEntry(book: littlePrince, date: calendar.date(byAdding: .day, value: -5, to: today) ?? today, createdAt: now.addingTimeInterval(-14_400), pageFrom: 35, pageTo: 72, note: "길들인다는 것과 관계를 맺는다는 것에 대해 생각했다.", readingRound: 1),
+            ReadingEntry(book: littlePrince, date: calendar.date(byAdding: .day, value: -7, to: today) ?? today, createdAt: now.addingTimeInterval(-28_800), pageFrom: 1, pageTo: 20, note: "두 번째로 읽으니 처음과 다른 문장이 보인다.", readingRound: 2),
+            ReadingEntry(book: littlePrince, date: august3LastYear, createdAt: august3LastYear.addingTimeInterval(36_000), pageFrom: 73, pageTo: 104, note: "여름의 끝에서 다시 읽으니 여우의 말이 더 선명하게 다가왔다.", readingRound: 0),
+            ReadingEntry(book: quietReading, date: august12LastYear, createdAt: august12LastYear.addingTimeInterval(36_000), pageFrom: 59, pageTo: 81, note: "작은 습관을 눈에 보이게 만드는 방법을 실천해 보기로 했다.", readingRound: 0),
+            ReadingEntry(book: littlePrince, date: august23LastYear, createdAt: august23LastYear.addingTimeInterval(36_000), pageFrom: 105, pageTo: 128, note: "별을 바라보는 마음을 오래 기억하고 싶다는 감상을 남겼다.", readingRound: 0)
+        ]
+        .forEach(modelContext.insert)
+
+        saveChanges()
+    }
+
+    private func saveCalendarBookOrders() {
         guard let encoded = try? JSONEncoder().encode(calendarBookOrders) else { return }
         UserDefaults.standard.set(encoded, forKey: calendarBookOrdersKey)
     }

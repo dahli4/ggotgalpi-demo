@@ -135,6 +135,7 @@ struct AddReadingEntryView: View {
     @State private var readingRound = 0
     @State private var hasFinishedReadingRound = false
     @State private var hasInitializedValues = false
+    @State private var showingEntryDeletionConfirmation = false
 
     private var trimmedFavoriteSentence: String {
         favoriteSentence.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -236,10 +237,29 @@ struct AddReadingEntryView: View {
                         dismiss()
                     }
                 }
+
+                if editingEntry != nil {
+                    ToolbarItem(placement: .bottomBar) {
+                        Button("기록 삭제", role: .destructive) {
+                            showingEntryDeletionConfirmation = true
+                        }
+                    }
+                }
             }
         }
         .presentationDetents([.large])
         .paperBackground()
+        .alert("감상 기록을 삭제할까요?", isPresented: $showingEntryDeletionConfirmation) {
+            Button("삭제", role: .destructive) {
+                if let editingEntry {
+                    store.deleteEntry(id: editingEntry.id)
+                }
+                dismiss()
+            }
+            Button("취소", role: .cancel) {}
+        } message: {
+            Text("삭제한 기록은 되돌릴 수 없습니다.")
+        }
         .onAppear {
             guard
                 !hasInitializedValues

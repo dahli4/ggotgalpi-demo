@@ -31,9 +31,25 @@ struct PaperBackground: ViewModifier {
     }
 }
 
+struct LiquidGlassCapsule: ViewModifier {
+    func body(content: Content) -> some View {
+        if #available(iOS 26.0, *) {
+            content
+                .glassEffect(.regular, in: Capsule())
+        } else {
+            content
+                .background(.ultraThinMaterial, in: Capsule())
+        }
+    }
+}
+
 extension View {
     func paperBackground() -> some View {
         modifier(PaperBackground())
+    }
+
+    func liquidGlassCapsule() -> some View {
+        modifier(LiquidGlassCapsule())
     }
 }
 

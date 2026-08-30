@@ -10,6 +10,8 @@ struct ContentView: View {
     @State private var isInteractiveSwipe = false
     @State private var calendarSearchResetID = 0
     @State private var bookshelfSearchResetID = 0
+    @State private var calendarScrollToTopID = 0
+    @State private var bookshelfScrollToTopID = 0
     @State private var calendarPastHighlightRefreshID = 0
     @Namespace private var dockGlassNamespace
 
@@ -27,12 +29,16 @@ struct ContentView: View {
                 ZStack {
                     CalendarView(
                         searchResetID: calendarSearchResetID,
-                        pastHighlightRefreshID: calendarPastHighlightRefreshID
+                        pastHighlightRefreshID: calendarPastHighlightRefreshID,
+                        scrollToTopID: calendarScrollToTopID
                     )
                         .frame(width: proxy.size.width, height: proxy.size.height)
                         .offset(x: calendarOffset(pageWidth: pageWidth))
 
-                    BookshelfView(searchResetID: bookshelfSearchResetID)
+                    BookshelfView(
+                        searchResetID: bookshelfSearchResetID,
+                        scrollToTopID: bookshelfScrollToTopID
+                    )
                         .frame(width: proxy.size.width, height: proxy.size.height)
                         .offset(x: bookshelfOffset(pageWidth: pageWidth))
                 }
@@ -219,8 +225,10 @@ struct ContentView: View {
             switch tab {
             case .calendar:
                 calendarSearchResetID += 1
+                calendarScrollToTopID += 1
             case .bookshelf:
                 bookshelfSearchResetID += 1
+                bookshelfScrollToTopID += 1
             }
             return
         }

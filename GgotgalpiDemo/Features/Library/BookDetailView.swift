@@ -7,6 +7,7 @@ struct BookDetailView: View {
     @State private var showingAddEntry = false
     @State private var showingEditBook = false
     @State private var editingEntry: ReadingEntry?
+    @State private var showingBookDeletionConfirmation = false
 
     private var currentBook: Book {
         store.book(for: book.id) ?? book
@@ -106,6 +107,14 @@ struct BookDetailView: View {
                     Button("닫기") { dismiss() }
                         .foregroundStyle(GgotgalpiTheme.secondaryInk)
                 }
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button(role: .destructive) {
+                        showingBookDeletionConfirmation = true
+                    } label: {
+                        Image(systemName: "trash")
+                    }
+                    .accessibilityLabel("책 삭제")
+                }
             }
             .sheet(isPresented: $showingAddEntry) {
                 AddReadingEntryView(book: currentBook, editingEntry: nil)
@@ -115,6 +124,15 @@ struct BookDetailView: View {
             }
             .sheet(isPresented: $showingEditBook) {
                 EditBookView(book: currentBook)
+            }
+            .alert("책을 삭제할까요?", isPresented: $showingBookDeletionConfirmation) {
+                Button("삭제", role: .destructive) {
+                    store.deleteBook(id: currentBook.id)
+                    dismiss()
+                }
+                Button("취소", role: .cancel) {}
+            } message: {
+                Text("책과 연결된 모든 감상 기록도 함께 삭제됩니다.")
             }
         }
         .paperBackground()

@@ -3,6 +3,7 @@ import SwiftUI
 struct BookshelfView: View {
     @EnvironmentObject private var store: DemoStore
     let searchResetID: Int
+    let scrollToTopID: Int
     @State private var selectedReadingStatus: ReadingStatus = .all
     @State private var selectedCategory: BookCategory = .all
     @State private var isShowingFilters = false
@@ -41,84 +42,92 @@ struct BookshelfView: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: GgotgalpiTheme.Spacing.section) {
-                    if isSearchExpanded {
-                        InlineUnifiedSearchView(
-                            query: $searchQuery,
-                            bookMatchesFilter: matchesBookshelfFilters
-                        )
-                            .transition(.move(edge: .top).combined(with: .opacity))
-                    }
-
-                    if !hasSearchTerm {
-                        NavigationLink {
-                            FavoriteSentencesView()
-                        } label: {
-                            FavoriteSentencesShortcut(
-                                sentenceCount: store.entries.filter { !$0.favoriteSentence.isEmpty }.count
+            ScrollViewReader { proxy in
+                ScrollView {
+                    VStack(alignment: .leading, spacing: GgotgalpiTheme.Spacing.section) {
+                        if isSearchExpanded {
+                            InlineUnifiedSearchView(
+                                query: $searchQuery,
+                                bookMatchesFilter: matchesBookshelfFilters
                             )
+                                .transition(.move(edge: .top).combined(with: .opacity))
                         }
-                        .buttonStyle(.plain)
 
-                        SectionLabel(title: "나의 책장")
+                        if !hasSearchTerm {
+                            NavigationLink {
+                                FavoriteSentencesView()
+                            } label: {
+                                FavoriteSentencesShortcut(
+                                    sentenceCount: store.entries.filter { !$0.favoriteSentence.isEmpty }.count
+                                )
+                            }
+                            .buttonStyle(.plain)
 
-                        LazyVStack(spacing: 0) {
-                            ForEach(visibleBooks) { book in
-                                Button {
-                                    selectedBook = book
-                                } label: {
-                                    BookCard(book: book, entryCount: store.entries(for: book.id).count)
-                                }
-                                .buttonStyle(.plain)
+                            SectionLabel(title: "나의 책장")
 
-                                if book.id != visibleBooks.last?.id {
-                                    DividerLine()
+                            LazyVStack(spacing: 0) {
+                                ForEach(visibleBooks) { book in
+                                    Button {
+                                        selectedBook = book
+                                    } label: {
+                                        BookCard(book: book, entryCount: store.entries(for: book.id).count)
+                                    }
+                                    .buttonStyle(.plain)
+
+                                    if book.id != visibleBooks.last?.id {
+                                        DividerLine()
+                                    }
                                 }
                             }
                         }
                     }
-                }
-                .padding(.horizontal, GgotgalpiTheme.Spacing.screen)
-                .padding(.vertical, GgotgalpiTheme.Spacing.content)
-            }
-            .scrollIndicators(.hidden)
-            // 툴바 슬롯의 고정 폭을 쓰지 않고, 화면의 좌우 여백 안에서 검색창을 직접 배치합니다.
-            .safeAreaPadding(.top, 40)
-            .overlay(alignment: .top) {
-                bookshelfActions
-                    .frame(maxWidth: .infinity, alignment: .trailing)
+                    .id("bookshelf-scroll-top")
                     .padding(.horizontal, GgotgalpiTheme.Spacing.screen)
-            }
-            .sheet(isPresented: $isShowingFilters) {
-                BookshelfFilterSheet(
-                    selectedReadingStatus: $selectedReadingStatus,
-                    selectedCategory: $selectedCategory
-                )
-                .presentationDetents([.medium])
-            }
-            .sheet(isPresented: $showingAddBook) {
-                AddBookView()
-            }
-            .sheet(item: $selectedBook) { book in
-                BookDetailView(book: book)
-            }
-            .overlay(alignment: .bottomTrailing) {
-                Button {
-                    showingAddBook = true
-                } label: {
-                    Image(systemName: "plus")
-                        .font(.title3.weight(.semibold))
-                        .foregroundStyle(GgotgalpiTheme.paper)
-                        .frame(width: 52, height: 52)
-                        .background(GgotgalpiTheme.accent)
-                        .clipShape(Circle())
-                        .shadow(color: .black.opacity(0.14), radius: 8, y: 4)
+                    .padding(.vertical, GgotgalpiTheme.Spacing.content)
                 }
-                .accessibilityLabel("새 책 등록")
-                // 하단 독의 오른쪽 빈 영역 바로 위에 떠 있도록 여백을 둡니다.
-                .padding(.trailing, GgotgalpiTheme.Spacing.screen)
-                .padding(.bottom, 76)
+                .onChange(of: scrollToTopID) {
+                    withAnimation(.easeOut(duration: 0.3)) {
+                        proxy.scrollTo("bookshelf-scroll-top", anchor: .top)
+                    }
+                }
+                .scrollIndicators(.hidden)
+                // 툴바 슬롯의 고정 폭을 쓰지 않고, 화면의 좌우 여백 안에서 검색창을 직접 배치합니다.
+                .safeAreaPadding(.top, 40)
+                .overlay(alignment: .top) {
+                    bookshelfActions
+                        .frame(maxWidth: .infinity, alignment: .trailing)
+                        .padding(.horizontal, GgotgalpiTheme.Spacing.screen)
+                }
+                .sheet(isPresented: $isShowingFilters) {
+                    BookshelfFilterSheet(
+                        selectedReadingStatus: $selectedReadingStatus,
+                        selectedCategory: $selectedCategory
+                    )
+                    .presentationDetents([.medium])
+                }
+                .sheet(isPresented: $showingAddBook) {
+                    AddBookView()
+                }
+                .sheet(item: $selectedBook) { book in
+                    BookDetailView(book: book)
+                }
+                .overlay(alignment: .bottomTrailing) {
+                    Button {
+                        showingAddBook = true
+                    } label: {
+                        Image(systemName: "plus")
+                            .font(.title3.weight(.semibold))
+                            .foregroundStyle(GgotgalpiTheme.paper)
+                            .frame(width: 52, height: 52)
+                            .background(GgotgalpiTheme.accent)
+                            .clipShape(Circle())
+                            .shadow(color: .black.opacity(0.14), radius: 8, y: 4)
+                    }
+                    .accessibilityLabel("새 책 등록")
+                    // 하단 독의 오른쪽 빈 영역 바로 위에 떠 있도록 여백을 둡니다.
+                    .padding(.trailing, GgotgalpiTheme.Spacing.screen)
+                    .padding(.bottom, 76)
+                }
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
@@ -159,7 +168,7 @@ struct BookshelfView: View {
             }
         }
         .foregroundStyle(GgotgalpiTheme.ink)
-        .background(Color.white.opacity(0.82), in: Capsule())
+        .liquidGlassCapsule()
         .animation(.easeInOut(duration: 0.24), value: isSearchExpanded)
     }
 

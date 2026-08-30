@@ -4,6 +4,7 @@ struct CalendarView: View {
     @EnvironmentObject private var store: DemoStore
     let searchResetID: Int
     let pastHighlightRefreshID: Int
+    let scrollToTopID: Int
     @State private var selectedDate = Calendar.current.startOfDay(for: Date())
     @State private var displayedMonth = Calendar.current.startOfMonth(for: Date())
     @State private var selectedReadingStatus: ReadingStatus = .all
@@ -94,49 +95,57 @@ struct CalendarView: View {
 
     var body: some View {
         NavigationStack {
+            ScrollViewReader { proxy in
                 ScrollView {
                     VStack(alignment: .leading, spacing: GgotgalpiTheme.Spacing.section) {
-                    if isSearchExpanded {
-                        InlineUnifiedSearchView(
-                            query: $searchQuery,
-                            bookMatchesFilter: matchesCalendarFilters
-                        )
-                            .transition(.move(edge: .top).combined(with: .opacity))
-                    }
+                        if isSearchExpanded {
+                            InlineUnifiedSearchView(
+                                query: $searchQuery,
+                                bookMatchesFilter: matchesCalendarFilters
+                            )
+                                .transition(.move(edge: .top).combined(with: .opacity))
+                        }
 
-                    if !hasSearchTerm {
-                        MonthlyCalendarGrid(
-                            displayedMonth: $displayedMonth,
-                            selectedDate: $selectedDate,
-                            books: { books(on: $0) },
-                            selectDate: { date in
-                                selectedDate = date
-                                isShowingDayEntries = true
-                            },
-                            requestReorder: { date in
-                                let books = books(on: date)
-                                guard books.count > 1 else { return }
-                                reorderRequest = CalendarBookReorderRequest(date: date, books: books)
-                            }
-                        )
+                        if !hasSearchTerm {
+                            MonthlyCalendarGrid(
+                                displayedMonth: $displayedMonth,
+                                selectedDate: $selectedDate,
+                                books: { books(on: $0) },
+                                selectDate: { date in
+                                    selectedDate = date
+                                    isShowingDayEntries = true
+                                },
+                                requestReorder: { date in
+                                    let books = books(on: date)
+                                    guard books.count > 1 else { return }
+                                    reorderRequest = CalendarBookReorderRequest(date: date, books: books)
+                                }
+                            )
 
-                        CalendarMonthlySummary(
-                            entries: monthlyEntries,
-                            latestEntry: mostRecentMonthlyEntry,
-                            latestBook: mostRecentMonthlyEntry.flatMap { store.book(for: $0.bookID) },
-                            lastYearMonth: lastYearMonth,
-                            lastYearBooks: lastYearMonthlyBooks,
-                            lastYearEntries: lastYearMonthlyEntries,
-                            pastHighlightRefreshID: pastHighlightRefreshID
-                        )
+                            CalendarMonthlySummary(
+                                entries: monthlyEntries,
+                                latestEntry: mostRecentMonthlyEntry,
+                                latestBook: mostRecentMonthlyEntry.flatMap { store.book(for: $0.bookID) },
+                                lastYearMonth: lastYearMonth,
+                                lastYearBooks: lastYearMonthlyBooks,
+                                lastYearEntries: lastYearMonthlyEntries,
+                                pastHighlightRefreshID: pastHighlightRefreshID
+                            )
+                        }
                     }
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
+                    .id("calendar-scroll-top")
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal, GgotgalpiTheme.Spacing.screen)
                 // 기존 내비게이션 바가 차지하던 높이를 유지해 상단 액션과 달력이 겹치지 않게 합니다.
                 .padding(.top, GgotgalpiTheme.Spacing.control + GgotgalpiTheme.Spacing.largeSection + GgotgalpiTheme.Spacing.content + GgotgalpiTheme.Spacing.compact)
                 // 하단 플로팅 독에 마지막 요약 항목이 가려지지 않도록 스크롤 여유를 둡니다.
-                .padding(.bottom, GgotgalpiTheme.Spacing.largeSection * 3)
+                    .padding(.bottom, GgotgalpiTheme.Spacing.largeSection * 3)
+                }
+                .onChange(of: scrollToTopID) {
+                    withAnimation(.easeOut(duration: 0.3)) {
+                        proxy.scrollTo("calendar-scroll-top", anchor: .top)
+                    }
+                }
             }
             .scrollIndicators(.hidden)
             // 달력 카드와 안전 영역을 같은 웜 베이지로 이어 화면 전체가 한 장처럼 보이게 합니다.
@@ -226,7 +235,7 @@ struct CalendarView: View {
             }
         }
         .foregroundStyle(GgotgalpiTheme.ink)
-        .background(Color.white.opacity(0.82), in: Capsule())
+        .liquidGlassCapsule()
         .animation(.easeInOut(duration: 0.24), value: isSearchExpanded)
     }
 
