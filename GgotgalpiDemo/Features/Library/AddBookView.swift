@@ -131,9 +131,14 @@ struct AddReadingEntryView: View {
     @State private var pageFrom = ""
     @State private var pageTo = ""
     @State private var note = ""
+    @State private var favoriteSentence = ""
     @State private var readingRound = 0
     @State private var hasFinishedReadingRound = false
     @State private var hasInitializedValues = false
+
+    private var trimmedFavoriteSentence: String {
+        favoriteSentence.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
 
     private var mostRecentPage: Int? {
         store.entries(for: book.id)
@@ -165,6 +170,15 @@ struct AddReadingEntryView: View {
                 Section("감상") {
                     TextEditor(text: $note)
                         .frame(minHeight: 130)
+                }
+
+                Section {
+                    TextEditor(text: $favoriteSentence)
+                        .frame(minHeight: 100)
+                } header: {
+                    Text("마음에 드는 문장")
+                } footer: {
+                    Text("오늘 읽은 내용 중 기억하고 싶은 문장을 남겨보세요.")
                 }
 
                 Section {
@@ -201,6 +215,7 @@ struct AddReadingEntryView: View {
                                 pageFrom: Int(pageFrom) ?? 0,
                                 pageTo: Int(pageTo) ?? 0,
                                 note: note.isEmpty ? "새로운 감상을 기록했어요." : note,
+                                favoriteSentence: trimmedFavoriteSentence,
                                 readingRound: readingRound
                             )
                         } else {
@@ -210,6 +225,7 @@ struct AddReadingEntryView: View {
                                 pageFrom: Int(pageFrom) ?? 0,
                                 pageTo: Int(pageTo) ?? 0,
                                 note: note.isEmpty ? "새로운 감상을 기록했어요." : note,
+                                favoriteSentence: trimmedFavoriteSentence,
                                 readingRound: readingRound
                             )
                         }
@@ -235,6 +251,7 @@ struct AddReadingEntryView: View {
                 pageFrom = String(editingEntry.pageFrom)
                 pageTo = String(editingEntry.pageTo)
                 note = editingEntry.note
+                favoriteSentence = editingEntry.favoriteSentence
                 readingRound = editingEntry.readingRound
                 hasFinishedReadingRound = book.readingStatus == .finished
             } else if book.readingStatus == .reading, let mostRecentPage {

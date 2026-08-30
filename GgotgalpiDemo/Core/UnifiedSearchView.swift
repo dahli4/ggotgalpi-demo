@@ -169,7 +169,7 @@ private struct UnifiedSearchSnapshot {
             guard let book = store.book(for: entry.bookID) else { return false }
             guard bookMatchesFilter(book) else { return false }
             guard !textQuery.isEmpty else { return true }
-            let searchableText = [book.title, book.author, entry.note]
+            let searchableText = [book.title, book.author, entry.note, entry.favoriteSentence]
                 .joined(separator: " ")
             return matchesSearchText(searchableText)
         }
@@ -495,6 +495,14 @@ private struct SearchEntryRow: View {
                         .font(.subheadline)
                         .foregroundStyle(GgotgalpiTheme.secondaryInk)
                         .lineLimit(2)
+
+                    if !entry.favoriteSentence.isEmpty {
+                        Text("“\(entry.favoriteSentence)”")
+                            .font(.caption)
+                            .foregroundStyle(GgotgalpiTheme.ink)
+                            .italic()
+                            .lineLimit(2)
+                    }
                 }
             }
         }

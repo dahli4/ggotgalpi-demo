@@ -60,6 +60,7 @@ struct ReadingEntry: Identifiable, Hashable {
     var pageFrom: Int
     var pageTo: Int
     var note: String
+    var favoriteSentence: String
     var readingRound: Int
 
     init(
@@ -70,6 +71,7 @@ struct ReadingEntry: Identifiable, Hashable {
         pageFrom: Int,
         pageTo: Int,
         note: String,
+        favoriteSentence: String = "",
         readingRound: Int
     ) {
         self.id = id
@@ -79,6 +81,7 @@ struct ReadingEntry: Identifiable, Hashable {
         self.pageFrom = pageFrom
         self.pageTo = pageTo
         self.note = note
+        self.favoriteSentence = favoriteSentence
         self.readingRound = readingRound
     }
 }
@@ -169,16 +172,27 @@ final class DemoStore: ObservableObject {
         )
     }
 
-    func addEntry(bookID: UUID, date: Date, pageFrom: Int, pageTo: Int, note: String, readingRound: Int) {
-        entries.append(ReadingEntry(bookID: bookID, date: date, pageFrom: pageFrom, pageTo: pageTo, note: note, readingRound: readingRound))
+    func addEntry(bookID: UUID, date: Date, pageFrom: Int, pageTo: Int, note: String, favoriteSentence: String = "", readingRound: Int) {
+        entries.append(
+            ReadingEntry(
+                bookID: bookID,
+                date: date,
+                pageFrom: pageFrom,
+                pageTo: pageTo,
+                note: note,
+                favoriteSentence: favoriteSentence,
+                readingRound: readingRound
+            )
+        )
     }
 
-    func updateEntry(id: UUID, date: Date, pageFrom: Int, pageTo: Int, note: String, readingRound: Int) {
+    func updateEntry(id: UUID, date: Date, pageFrom: Int, pageTo: Int, note: String, favoriteSentence: String = "", readingRound: Int) {
         guard let index = entries.firstIndex(where: { $0.id == id }) else { return }
         entries[index].date = date
         entries[index].pageFrom = pageFrom
         entries[index].pageTo = pageTo
         entries[index].note = note
+        entries[index].favoriteSentence = favoriteSentence
         entries[index].readingRound = readingRound
     }
 

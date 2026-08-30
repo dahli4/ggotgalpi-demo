@@ -156,6 +156,21 @@ struct ReadingEntryRow: View {
                 .font(.subheadline)
                 .foregroundStyle(GgotgalpiTheme.secondaryInk)
                 .lineSpacing(3)
+
+            if !entry.favoriteSentence.isEmpty {
+                HStack(alignment: .top, spacing: 6) {
+                    Image(systemName: "quote.opening")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(GgotgalpiTheme.accent)
+
+                    Text(entry.favoriteSentence)
+                        .font(.subheadline)
+                        .foregroundStyle(GgotgalpiTheme.ink)
+                        .italic()
+                        .lineSpacing(3)
+                }
+                .padding(.top, 2)
+            }
         }
         .padding(.vertical, 3)
         .frame(maxWidth: .infinity, alignment: .leading)

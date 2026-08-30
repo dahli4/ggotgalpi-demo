@@ -50,6 +50,14 @@ struct MyRecordView: View {
                                         .font(.subheadline)
                                         .foregroundStyle(GgotgalpiTheme.secondaryInk)
                                         .fixedSize(horizontal: false, vertical: true)
+
+                                    if !entry.favoriteSentence.isEmpty {
+                                        Text("“\(entry.favoriteSentence)”")
+                                            .font(.caption)
+                                            .foregroundStyle(GgotgalpiTheme.ink)
+                                            .italic()
+                                            .fixedSize(horizontal: false, vertical: true)
+                                    }
                                 }
                             }
                             .padding(.vertical, GgotgalpiTheme.Spacing.compact)
