@@ -5,6 +5,7 @@ struct BookshelfView: View {
     let searchResetID: Int
     @State private var selectedReadingStatus: ReadingStatus = .all
     @State private var selectedCategory: BookCategory = .all
+    @State private var isShowingFilters = false
     @State private var showingAddBook = false
     @State private var selectedBook: Book?
     @State private var isSearchExpanded = false
@@ -25,6 +26,19 @@ struct BookshelfView: View {
         !searchQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
+    private var hasActiveFilter: Bool {
+        selectedReadingStatus != .all || selectedCategory != .all
+    }
+
+    private var filterSummary: String {
+        [
+            selectedReadingStatus == .all ? nil : selectedReadingStatus.rawValue,
+            selectedCategory == .all ? nil : selectedCategory.rawValue
+        ]
+        .compactMap { $0 }
+        .joined(separator: " · ")
+    }
+
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -38,9 +52,6 @@ struct BookshelfView: View {
                     }
 
                     if !hasSearchTerm {
-                        ReadingStatusPicker(selection: $selectedReadingStatus)
-                        CategoryUnderlineTabs(selection: $selectedCategory)
-
                         NavigationLink {
                             FavoriteSentencesView()
                         } label: {
@@ -75,9 +86,16 @@ struct BookshelfView: View {
             // 툴바 슬롯의 고정 폭을 쓰지 않고, 화면의 좌우 여백 안에서 검색창을 직접 배치합니다.
             .safeAreaPadding(.top, 40)
             .overlay(alignment: .top) {
-                bookshelfSearchControl
+                bookshelfActions
                     .frame(maxWidth: .infinity, alignment: .trailing)
                     .padding(.horizontal, GgotgalpiTheme.Spacing.screen)
+            }
+            .sheet(isPresented: $isShowingFilters) {
+                BookshelfFilterSheet(
+                    selectedReadingStatus: $selectedReadingStatus,
+                    selectedCategory: $selectedCategory
+                )
+                .presentationDetents([.medium])
             }
             .sheet(isPresented: $showingAddBook) {
                 AddBookView()
@@ -110,23 +128,58 @@ struct BookshelfView: View {
         }
     }
 
-    private var bookshelfSearchControl: some View {
+    private var bookshelfActions: some View {
         Group {
             if isSearchExpanded {
                 HStack(spacing: 0) {
                     bookshelfSearchField
                         .layoutPriority(1)
 
-                    bookshelfSearchButton
+                    bookshelfActionIcons
                 }
                 .frame(maxWidth: .infinity, minHeight: 40, maxHeight: 40)
             } else {
-                bookshelfSearchButton
+                HStack(spacing: GgotgalpiTheme.Spacing.compact) {
+                    if hasActiveFilter {
+                        Button {
+                            isShowingFilters = true
+                        } label: {
+                            Text(filterSummary)
+                                .font(.caption.weight(.medium))
+                                .lineLimit(1)
+                                .padding(.leading, GgotgalpiTheme.Spacing.control)
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("적용된 필터: \(filterSummary)")
+                    }
+
+                    bookshelfActionIcons
+                }
+                .frame(height: 40)
             }
         }
         .foregroundStyle(GgotgalpiTheme.ink)
         .background(Color.white.opacity(0.82), in: Capsule())
         .animation(.easeInOut(duration: 0.24), value: isSearchExpanded)
+    }
+
+    private var bookshelfActionIcons: some View {
+        HStack(spacing: GgotgalpiTheme.Spacing.compact) {
+            bookshelfFilterButton
+            bookshelfSearchButton
+        }
+    }
+
+    private var bookshelfFilterButton: some View {
+        Button {
+            isShowingFilters = true
+        } label: {
+            Image(systemName: "line.3.horizontal.decrease.circle")
+                .font(.body)
+                .frame(width: 40, height: 40)
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("책장 필터")
     }
 
     private var bookshelfSearchButton: some View {
@@ -188,17 +241,54 @@ struct BookshelfView: View {
     }
 }
 
-/// 책장 상단의 읽기 상태 탭입니다. 선택된 상태 안에서 아래 장르 탭이 다시 적용됩니다.
-struct ReadingStatusPicker: View {
-    @Binding var selection: ReadingStatus
+private struct BookshelfFilterSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    @Binding var selectedReadingStatus: ReadingStatus
+    @Binding var selectedCategory: BookCategory
 
     var body: some View {
-        Picker("읽기 상태", selection: $selection) {
-            ForEach(ReadingStatus.allCases) { status in
-                Text(status.rawValue).tag(status)
+        NavigationStack {
+            VStack(alignment: .leading, spacing: GgotgalpiTheme.Spacing.section) {
+                Text("책장에 표시할 책을 골라 보세요.")
+                    .font(.subheadline)
+                    .foregroundStyle(GgotgalpiTheme.secondaryInk)
+
+                VStack(alignment: .leading, spacing: GgotgalpiTheme.Spacing.compact) {
+                    Text("읽은 상태")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(GgotgalpiTheme.secondaryInk)
+
+                    ReadingStatusUnderlineTabs(selection: $selectedReadingStatus)
+                }
+
+                VStack(alignment: .leading, spacing: GgotgalpiTheme.Spacing.compact) {
+                    Text("장르")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(GgotgalpiTheme.secondaryInk)
+
+                    CalendarCategoryTabs(selection: $selectedCategory)
+                }
+
+                Spacer()
+            }
+            .padding(.horizontal, GgotgalpiTheme.Spacing.screen)
+            .padding(.top, GgotgalpiTheme.Spacing.content)
+            .navigationTitle("필터")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("초기화") {
+                        selectedReadingStatus = .all
+                        selectedCategory = .all
+                    }
+                }
+
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("완료") { dismiss() }
+                }
             }
         }
-        .pickerStyle(.segmented)
+        .paperBackground()
     }
 }
 
@@ -258,41 +348,6 @@ struct CalendarCategoryTabs: View {
                         .frame(width: 0.7, height: 18)
                 }
             }
-        }
-    }
-}
-
-/// 상태 탭보다 한 단계 낮은 장르 필터입니다. 별도 회색 컨트롤 대신 가벼운 텍스트 탭으로 표현합니다.
-struct CategoryUnderlineTabs: View {
-    @Binding var selection: BookCategory
-
-    var body: some View {
-        HStack(spacing: 0) {
-            ForEach(BookCategory.allCases) { category in
-                Button {
-                    selection = category
-                } label: {
-                    VStack(spacing: 7) {
-                        Text(category.rawValue)
-                            .font(.subheadline.weight(selection == category ? .semibold : .regular))
-                            .foregroundStyle(selection == category ? GgotgalpiTheme.ink : GgotgalpiTheme.secondaryInk)
-
-                        Capsule()
-                            .fill(selection == category ? GgotgalpiTheme.accent : .clear)
-                            .frame(height: 2)
-                    }
-                    .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel("장르: \(category.rawValue)")
-                .accessibilityAddTraits(selection == category ? .isSelected : [])
-            }
-        }
-        .padding(.top, 2)
-        .overlay(alignment: .bottom) {
-            Rectangle()
-                .fill(GgotgalpiTheme.line.opacity(0.55))
-                .frame(height: 0.6)
         }
     }
 }
