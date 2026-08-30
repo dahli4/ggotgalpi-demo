@@ -40,6 +40,16 @@ struct BookshelfView: View {
                     if !hasSearchTerm {
                         ReadingStatusPicker(selection: $selectedReadingStatus)
                         CategoryUnderlineTabs(selection: $selectedCategory)
+
+                        NavigationLink {
+                            FavoriteSentencesView()
+                        } label: {
+                            FavoriteSentencesShortcut(
+                                sentenceCount: store.entries.filter { !$0.favoriteSentence.isEmpty }.count
+                            )
+                        }
+                        .buttonStyle(.plain)
+
                         SectionLabel(title: "나의 책장")
 
                         LazyVStack(spacing: 0) {
