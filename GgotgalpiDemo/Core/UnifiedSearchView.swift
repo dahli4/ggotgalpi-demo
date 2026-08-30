@@ -6,11 +6,12 @@ struct UnifiedSearchView: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var store: DemoStore
     @State private var query = ""
+    @State private var debouncedQuery = ""
     @State private var selectedBook: Book?
     @State private var showingAddBook = false
 
     private var searchSnapshot: UnifiedSearchSnapshot {
-        UnifiedSearchSnapshot(query: query, store: store)
+        UnifiedSearchSnapshot(query: debouncedQuery, store: store)
     }
 
     private var hasSearchTerm: Bool { searchSnapshot.hasSearchTerm }
@@ -101,6 +102,20 @@ struct UnifiedSearchView: View {
             }
         }
         .paperBackground()
+        .task(id: query) {
+            await updateDebouncedQuery(for: query)
+        }
+    }
+
+    private func updateDebouncedQuery(for query: String) async {
+        guard !query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            debouncedQuery = ""
+            return
+        }
+
+        try? await Task.sleep(nanoseconds: 500_000_000)
+        guard !Task.isCancelled else { return }
+        debouncedQuery = query
     }
 
     @ViewBuilder
@@ -238,6 +253,7 @@ struct InlineUnifiedSearchView: View {
     private let bookMatchesFilter: (Book) -> Bool
     @State private var selectedBook: Book?
     @State private var showingAddBook = false
+    @State private var debouncedQuery = ""
 
     init(
         query: Binding<String>,
@@ -249,7 +265,7 @@ struct InlineUnifiedSearchView: View {
 
     private var snapshot: UnifiedSearchSnapshot {
         UnifiedSearchSnapshot(
-            query: query,
+            query: debouncedQuery,
             store: store,
             bookMatchesFilter: bookMatchesFilter
         )
@@ -324,6 +340,9 @@ struct InlineUnifiedSearchView: View {
         .sheet(isPresented: $showingAddBook) {
             AddBookView()
         }
+        .task(id: query) {
+            await updateDebouncedQuery(for: query)
+        }
     }
 
     private var addBookButton: some View {
@@ -348,6 +367,17 @@ struct InlineUnifiedSearchView: View {
                 .buttonStyle(.plain)
             }
         }
+    }
+
+    private func updateDebouncedQuery(for query: String) async {
+        guard !query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            debouncedQuery = ""
+            return
+        }
+
+        try? await Task.sleep(nanoseconds: 500_000_000)
+        guard !Task.isCancelled else { return }
+        debouncedQuery = query
     }
 }
 

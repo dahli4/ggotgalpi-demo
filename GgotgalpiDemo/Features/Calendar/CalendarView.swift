@@ -3,6 +3,7 @@ import SwiftUI
 struct CalendarView: View {
     @EnvironmentObject private var store: DemoStore
     let searchResetID: Int
+    let pastHighlightRefreshID: Int
     @State private var selectedDate = Calendar.current.startOfDay(for: Date())
     @State private var displayedMonth = Calendar.current.startOfMonth(for: Date())
     @State private var selectedReadingStatus: ReadingStatus = .all
@@ -75,15 +76,15 @@ struct CalendarView: View {
         Calendar.current.date(byAdding: .year, value: -1, to: displayedMonth) ?? displayedMonth
     }
 
+    private var lastYearMonthlyEntries: [ReadingEntry] {
+        store.entries.filter {
+            Calendar.current.isDate($0.date, equalTo: lastYearMonth, toGranularity: .month)
+                && matchesCalendarFilters($0)
+        }
+    }
+
     private var lastYearMonthlyBooks: [Book] {
-        let bookIDs = Set(
-            store.entries
-                .filter {
-                    Calendar.current.isDate($0.date, equalTo: lastYearMonth, toGranularity: .month)
-                        && matchesCalendarFilters($0)
-                }
-                .map(\.bookID)
-        )
+        let bookIDs = Set(lastYearMonthlyEntries.map(\.bookID))
         return store.books.filter { bookIDs.contains($0.id) }
     }
 
@@ -124,7 +125,9 @@ struct CalendarView: View {
                             latestEntry: mostRecentMonthlyEntry,
                             latestBook: mostRecentMonthlyEntry.flatMap { store.book(for: $0.bookID) },
                             lastYearMonth: lastYearMonth,
-                            lastYearBooks: lastYearMonthlyBooks
+                            lastYearBooks: lastYearMonthlyBooks,
+                            lastYearEntries: lastYearMonthlyEntries,
+                            pastHighlightRefreshID: pastHighlightRefreshID
                         )
                     }
                 }
@@ -312,7 +315,10 @@ private struct CalendarMonthlySummary: View {
     let latestBook: Book?
     let lastYearMonth: Date
     let lastYearBooks: [Book]
+    let lastYearEntries: [ReadingEntry]
+    let pastHighlightRefreshID: Int
     @State private var featuredLastYearBookID: UUID?
+    @State private var selectedPastBook: Book?
 
     private var readBookCount: Int {
         Set(entries.map(\.bookID)).count
@@ -372,23 +378,28 @@ private struct CalendarMonthlySummary: View {
                     .foregroundStyle(GgotgalpiTheme.ink)
 
                 if let featuredLastYearBook {
-                    HStack(spacing: 10) {
-                        BookColorMark(
-                            title: featuredLastYearBook.title,
-                            color: featuredLastYearBook.coverColor,
-                            size: 38
-                        )
+                    Button {
+                        selectedPastBook = featuredLastYearBook
+                    } label: {
+                        HStack(spacing: 10) {
+                            BookColorMark(
+                                title: featuredLastYearBook.title,
+                                color: featuredLastYearBook.coverColor,
+                                size: 38
+                            )
 
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(featuredLastYearBook.title)
-                                .font(.subheadline.weight(.semibold))
-                                .foregroundStyle(GgotgalpiTheme.ink)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(featuredLastYearBook.title)
+                                    .font(.subheadline.weight(.semibold))
+                                    .foregroundStyle(GgotgalpiTheme.ink)
 
-                            Text(featuredLastYearBook.author)
-                                .font(.caption)
-                                .foregroundStyle(GgotgalpiTheme.secondaryInk)
+                                Text(featuredLastYearBook.author)
+                                    .font(.caption)
+                                    .foregroundStyle(GgotgalpiTheme.secondaryInk)
+                            }
                         }
                     }
+                    .buttonStyle(.plain)
                 } else {
                     Text("이 달에 읽은 책이 없어요.")
                         .font(.subheadline)
@@ -397,14 +408,96 @@ private struct CalendarMonthlySummary: View {
             }
             .padding(.top, GgotgalpiTheme.Spacing.largeSection * 2)
         }
-        .onAppear(perform: selectFeaturedLastYearBook)
+        .onAppear {
+            selectFeaturedLastYearBook()
+        }
         .onChange(of: lastYearBooks.map(\.id)) {
             selectFeaturedLastYearBook()
         }
+        .onChange(of: pastHighlightRefreshID) {
+            selectFeaturedLastYearBook(preferDifferentBook: true)
+        }
+        .sheet(item: $selectedPastBook) { book in
+            CalendarPastReadingEntriesSheet(
+                book: book,
+                month: lastYearMonth,
+                entries: lastYearEntries.filter { $0.bookID == book.id }
+            )
+            .presentationDetents([.medium, .large])
+        }
     }
 
-    private func selectFeaturedLastYearBook() {
-        featuredLastYearBookID = lastYearBooks.randomElement()?.id
+    private func selectFeaturedLastYearBook(preferDifferentBook: Bool = false) {
+        let candidates = preferDifferentBook
+            ? lastYearBooks.filter { $0.id != featuredLastYearBookID }
+            : lastYearBooks
+        featuredLastYearBookID = (candidates.isEmpty ? lastYearBooks : candidates).randomElement()?.id
+    }
+}
+
+private struct CalendarPastReadingEntriesSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    let book: Book
+    let month: Date
+    let entries: [ReadingEntry]
+
+    private var sortedEntries: [ReadingEntry] {
+        entries.sorted { $0.date > $1.date }
+    }
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: GgotgalpiTheme.Spacing.section) {
+                    HStack(spacing: GgotgalpiTheme.Spacing.control) {
+                        BookColorMark(title: book.title, color: book.coverColor, size: 52)
+
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text(book.title)
+                                .font(.headline)
+                                .foregroundStyle(GgotgalpiTheme.ink)
+                            Text(book.author)
+                                .font(.subheadline)
+                                .foregroundStyle(GgotgalpiTheme.secondaryInk)
+                        }
+                    }
+
+                    Text("\(month.formatted(.dateTime.year().month().locale(Locale(identifier: "ko_KR"))))에 남긴 감상")
+                        .font(.subheadline.weight(.medium))
+                        .foregroundStyle(GgotgalpiTheme.secondaryInk)
+
+                    ForEach(sortedEntries) { entry in
+                        VStack(alignment: .leading, spacing: 7) {
+                            Text(entry.date.formatted(.dateTime.month().day().weekday(.short).locale(Locale(identifier: "ko_KR"))))
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(GgotgalpiTheme.secondaryInk)
+
+                            Text(entry.note)
+                                .font(.body)
+                                .foregroundStyle(GgotgalpiTheme.ink)
+
+                            Text("p. \(entry.pageFrom)–\(entry.pageTo) · \(entry.readingRound)회독")
+                                .font(.caption)
+                                .foregroundStyle(GgotgalpiTheme.secondaryInk)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+
+                        if entry.id != sortedEntries.last?.id {
+                            Divider()
+                        }
+                    }
+                }
+                .padding(GgotgalpiTheme.Spacing.screen)
+            }
+            .background(GgotgalpiTheme.paper)
+            .navigationTitle("지난 이맘때의 감상")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("닫기") { dismiss() }
+                }
+            }
+        }
     }
 }
 

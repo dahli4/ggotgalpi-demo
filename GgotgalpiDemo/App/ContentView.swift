@@ -10,6 +10,7 @@ struct ContentView: View {
     @State private var isInteractiveSwipe = false
     @State private var calendarSearchResetID = 0
     @State private var bookshelfSearchResetID = 0
+    @State private var calendarPastHighlightRefreshID = 0
     @Namespace private var dockGlassNamespace
 
     private let edgeActivationWidth: CGFloat = 28
@@ -24,7 +25,10 @@ struct ContentView: View {
                 let pageWidth = proxy.size.width
 
                 ZStack {
-                    CalendarView(searchResetID: calendarSearchResetID)
+                    CalendarView(
+                        searchResetID: calendarSearchResetID,
+                        pastHighlightRefreshID: calendarPastHighlightRefreshID
+                    )
                         .frame(width: proxy.size.width, height: proxy.size.height)
                         .offset(x: calendarOffset(pageWidth: pageWidth))
 
@@ -219,6 +223,10 @@ struct ContentView: View {
                 bookshelfSearchResetID += 1
             }
             return
+        }
+
+        if tab == .calendar {
+            calendarPastHighlightRefreshID += 1
         }
 
         withAnimation(.easeInOut(duration: 0.32)) {
