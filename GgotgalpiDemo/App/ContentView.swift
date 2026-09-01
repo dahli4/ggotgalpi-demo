@@ -60,12 +60,12 @@ struct ContentView: View {
                 }
             }
         }
-        .ignoresSafeArea()
+        // 화면 배경은 기기 가장자리까지 확장하되, 키보드가 나타날 때는 안전 영역을 존중합니다.
+        .ignoresSafeArea(.container)
         .overlay(alignment: .bottom) {
             tabDock
         }
         .tint(GgotgalpiTheme.accent)
-        .ignoresSafeArea(.keyboard)
     }
 
     private var screenBackground: Color {
