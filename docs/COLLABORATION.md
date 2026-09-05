@@ -1,106 +1,68 @@
-# 꽃갈피 협업 · 서명 · 배포
+# 꽃갈피 — 누가 무엇을
 
-배포 계정은 **동영(김동영)** Apple Developer 팀입니다. 앱은 친구가 만들고, 실기기 테스트와 TestFlight 업로드는 같은 팀으로 합니다.
+앱 코드는 친구가 만들고 GitHub도 친구 저장소가 원본입니다.  
+동영은 그 저장소를 클론해서, **자기 Apple Developer 계정으로만** 실기기 서명과 스토어 배포를 합니다.
 
-## 역할
+| | 동영 | 친구 |
+| --- | --- | --- |
+| GitHub | 클론해서 받아옴 | 원본 저장소 주인 |
+| Apple | 계정 주인 (Team `7H8779959T`) | 그 팀에 App Manager로 들어가 있음 |
+| 하는 일 | TestFlight / 앱스토어 업로드 | 코드, 시뮬레이터, 실기기 실행 |
 
-| 사람 | Apple | GitHub | 하는 일 |
-| --- | --- | --- | --- |
-| 동영 | Account Holder `hellrot99@nate.com` / Team `7H8779959T` | `dahli4` | 계정·인증서·스토어 소유, 심사 제출 |
-| 성현 | App Manager `writer161@live.co.kr` | `nbyvsmn4cr-source` | 코드, 실기기 실행, TestFlight 업로드 |
+원본: https://github.com/nbyvsmn4cr-source/ggotgalpi-demo
 
-작업 저장소는 배포 계정 포크입니다.
+Xcode에서 **바꾸지 말 값**
 
-- 작업/배포: https://github.com/dahli4/ggotgalpi-demo
-- 원본 데모: https://github.com/nbyvsmn4cr-source/ggotgalpi-demo
+- Team: **DongYoung Kim** (`7H8779959T`)
+- Bundle ID: `com.dahli4.ggotgalpi`
+- Signing: Automatically manage signing
 
-```bash
-git clone https://github.com/dahli4/ggotgalpi-demo.git
-cd ggotgalpi-demo
-open GgotgalpiDemo.xcodeproj
-```
+---
 
-이미 원본을 클론했다면:
+## 동영 (이미 된 것 / 남은 것)
 
-```bash
-git remote add dahli4 https://github.com/dahli4/ggotgalpi-demo.git
-git fetch dahli4
-git checkout main
-git merge dahli4/main
-```
+된 것
 
-## 고정값 — 바꾸지 말 것
+- Apple 팀에 친구(`writer161@live.co.kr`) App Manager로 들어가 있음
+- Bundle ID `com.dahli4.ggotgalpi` 등록됨
+- 이 클론에 Automatic Signing, 팀, Bundle ID가 박혀 있음
+- 로컬 업로드 스크립트: `./scripts/upload-testflight.sh` / `bundle exec fastlane ios beta`
 
-Xcode Target → Signing & Capabilities:
+동영이 콘솔에서 한 번만
 
-- **Team:** DongYoung Kim (`7H8779959T`)
-- **Bundle Identifier:** `com.dahli4.ggotgalpi`
-- **Signing:** Automatically manage signing
-
-팀이나 Bundle ID를 개인 팀으로 바꾸면 실기기·TestFlight가 깨집니다.
-
-## 친구가 실기기에 실행
-
-1. Xcode → Settings → Accounts에 `writer161@live.co.kr`을 추가합니다.
-2. 프로젝트를 열고 Signing의 Team이 **DongYoung Kim**인지 확인합니다.
-3. iPhone을 맥에 연결하고 Trust 한 뒤, 기기 대상과 `GgotgalpiDemo` 스킴으로 Run 합니다.
-4. 처음이면 Xcode가 Development 인증서와 프로비저닝 프로필을 자동 발급하고, 기기를 팀에 등록합니다.
-5. iPhone 설정 → 일반 → VPN 및 기기 관리에서 개발자 앱을 신뢰해야 할 수 있습니다.
-
-시뮬레이터만 돌릴 때는 서명이 필요 없습니다.
-
-## 친구가 TestFlight에 올리는 방법
-
-로컬에서 Distribution 인증서 개인키가 없는 맥이 많습니다. **GitHub Actions를 기본 배포 경로로 씁니다.**
-
-1. 변경을 `dahli4/ggotgalpi-demo`의 `main`에 푸시합니다.
-2. GitHub → Actions → **TestFlight** → Run workflow.
-3. 처리가 끝나면 App Store Connect → TestFlight에서 빌드를 확인합니다.
-
-로컬에서 올리는 경우(동영 맥, API 키가 있는 환경):
+1. Xcode → Settings → Accounts에 `hellrot99@nate.com` 로그인 (이 맥에 인증서가 내려옴)
+2. [App Store Connect](https://appstoreconnect.apple.com) → My Apps → **+**
+   - iOS
+   - 이름: 꽃갈피
+   - 언어: Korean
+   - Bundle ID: `com.dahli4.ggotgalpi`
+   - SKU: `ggotgalpi`
+3. 이후 배포는 이 맥에서:
 
 ```bash
-bundle install
-bundle exec fastlane ios beta
-```
-
-또는:
-
-```bash
+cd ~/Documents/ggotgalpi-demo
 ./scripts/upload-testflight.sh
 ```
 
-Xcode Organizer로 Archive → Distribute 해도 됩니다. 이때도 Team은 DongYoung Kim이어야 합니다.
+Git은 친구 원본을 `origin`으로 두고 풀 받으면 됩니다. Apple 키(`.p8`)는 git에 넣지 않습니다.
 
-## 동영이 한 번만 해 두면 되는 것
+---
 
-Apple 팀 초대는 이미 되어 있습니다(성현 = App Manager).
+## 친구에게 시키면 되는 것
 
-이미 되어 있는 것:
+카톡/슬랙에 그대로 보내도 됩니다.
 
-- Apple 팀: 성현(`writer161@live.co.kr`) App Manager
-- Developer Portal Bundle ID: `com.dahli4.ggotgalpi`
-- GitHub Write 초대: `nbyvsmn4cr-source` → `dahli4/ggotgalpi-demo` (수락 필요)
-- GitHub Actions Secrets: `APP_STORE_CONNECT_API_KEY_ID` / `ISSUER_ID` / `API_KEY`
+1. 저장소는 지금처럼 **자기 GitHub** 쓰면 됨. 동영 포크로 옮기지 말 것.
+2. 동영이 올린 PR(서명 설정)을 머지하면 Team/Bundle ID가 프로젝트에 들어감.
+3. Xcode → Settings → Accounts에 **Apple 팀 초대받은 메일** (`writer161@live.co.kr`) 로그인.
+4. `GgotgalpiDemo.xcodeproj` 열고 Signing & Capabilities에서
+   - Team = **DongYoung Kim**
+   - Bundle Identifier = `com.dahli4.ggotgalpi`
+   - Automatically manage signing 켜짐
+   - 개인 팀이나 다른 Bundle ID로 바꾸지 말 것.
+5. iPhone 연결 → Trust → 스킴 `GgotgalpiDemo`로 Run.
+6. 처음이면 아이폰 설정 → 일반 → VPN 및 기기 관리에서 개발자 앱 신뢰.
+7. 시뮬레이터만 쓸 때는 서명 신경 안 써도 됨.
+8. 앱스토어/TestFlight 업로드는 동영이 함. 친구가 Archive로 올리지 않아도 됨.
 
-동영이 콘솔에서 한 번만 만들면 되는 것:
-
-1. [App Store Connect](https://appstoreconnect.apple.com) → My Apps → +
-   - Platforms: iOS
-   - Name: 꽃갈피
-   - Primary Language: Korean
-   - Bundle ID: `com.dahli4.ggotgalpi`
-   - SKU: `ggotgalpi`
-   - 사용자 액세스: 전체(성현 포함)
-
-`.p8` / `.p12` / 프로비저닝 프로필은 git에 넣지 않습니다.
-
-## 문제 해결
-
-| 증상 | 보통 원인 |
-| --- | --- |
-| Failed to register bundle identifier | Bundle ID를 개인 팀으로 바꿈 |
-| No signing certificate / team not found | Xcode에 팀 멤버 Apple ID가 없음 |
-| Communication with Apple failed | 네트워크, 2FA, 세션 만료. Xcode Accounts에서 재로그인 |
-| Archive는 되는데 Upload 실패 | Distribution 개인키가 이 맥에 없음 → Actions로 업로드 |
-| CI가 secret missing | `dahli4/ggotgalpi-demo` Settings → Secrets에 API 키 3개 없음 |
+안 되면 거의 항상 Team을 개인 계정으로 바꿔서입니다. DongYoung Kim으로 되돌리면 됩니다.
