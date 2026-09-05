@@ -76,21 +76,22 @@ Xcode Organizer로 Archive → Distribute 해도 됩니다. 이때도 Team은 Do
 
 Apple 팀 초대는 이미 되어 있습니다(성현 = App Manager).
 
-추가로 필요한 경우:
+이미 되어 있는 것:
 
-1. [App Store Connect](https://appstoreconnect.apple.com) → My Apps → + 로 앱을 한 번 만듭니다.
+- Apple 팀: 성현(`writer161@live.co.kr`) App Manager
+- Developer Portal Bundle ID: `com.dahli4.ggotgalpi`
+- GitHub Write 초대: `nbyvsmn4cr-source` → `dahli4/ggotgalpi-demo` (수락 필요)
+- GitHub Actions Secrets: `APP_STORE_CONNECT_API_KEY_ID` / `ISSUER_ID` / `API_KEY`
+
+동영이 콘솔에서 한 번만 만들면 되는 것:
+
+1. [App Store Connect](https://appstoreconnect.apple.com) → My Apps → +
    - Platforms: iOS
    - Name: 꽃갈피
    - Primary Language: Korean
    - Bundle ID: `com.dahli4.ggotgalpi`
    - SKU: `ggotgalpi`
-   - 사용자 액세스: 전체(성현 App Manager 포함)
-2. Users and Access에서 성현 역할이 App Manager인지 확인
-3. GitHub `dahli4/ggotgalpi-demo`에 성현(`nbyvsmn4cr-source`) Write 권한
-4. 같은 저장소 Secrets:
-   - `APP_STORE_CONNECT_API_KEY_ID`
-   - `APP_STORE_CONNECT_ISSUER_ID`
-   - `APP_STORE_CONNECT_API_KEY` (`.p8` 파일 내용)
+   - 사용자 액세스: 전체(성현 포함)
 
 `.p8` / `.p12` / 프로비저닝 프로필은 git에 넣지 않습니다.
 
