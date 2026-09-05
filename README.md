@@ -19,15 +19,17 @@
 
 ## 시작하기
 
+배포·실기기 작업은 계정 소유자 포크를 기준으로 합니다.
+
 ```bash
-git clone https://github.com/nbyvsmn4cr-source/ggotgalpi-demo.git
+git clone https://github.com/dahli4/ggotgalpi-demo.git
 cd ggotgalpi-demo
 open GgotgalpiDemo.xcodeproj
 ```
 
 Xcode에서 `GgotgalpiDemo` 스킴과 iPhone 시뮬레이터를 선택한 뒤 실행합니다.
 
-실기기에서 실행하거나 배포하려면 Target의 Signing & Capabilities에서 개발 팀과 고유 Bundle Identifier를 먼저 지정하세요.
+실기기 실행과 TestFlight 배포는 **DongYoung Kim** 팀의 Automatic Signing을 사용합니다. Team / Bundle ID를 바꾸지 마세요. 친구 협업, 인증서, 배포 절차는 [docs/COLLABORATION.md](docs/COLLABORATION.md)에 있습니다.
 
 서명 없이 명령줄 빌드를 확인하려면 다음 명령을 사용할 수 있습니다.
 
