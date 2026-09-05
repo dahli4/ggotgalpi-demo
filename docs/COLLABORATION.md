@@ -50,19 +50,18 @@ Git은 친구 원본을 `origin`으로 두고 풀 받으면 됩니다. Apple 키
 
 ## 친구에게 시키면 되는 것
 
-카톡/슬랙에 그대로 보내도 됩니다.
+동영 Apple 멤버십은 **Individual(개인)** 이라, 친구를 App Store Connect에 초대해도 Xcode Team 목록에 **DongYoung Kim이 안 뜹니다.** Apple 제한입니다. Certificates 권한도 개인 계정에선 줄 수 없습니다.
 
-1. 저장소는 지금처럼 **자기 GitHub** 쓰면 됨. 동영 포크로 옮기지 말 것.
-2. 동영이 올린 PR(서명 설정)을 머지하면 Team/Bundle ID가 프로젝트에 들어감.
-3. Xcode → Settings → Accounts에 **Apple 팀 초대받은 메일** (`writer161@live.co.kr`) 로그인.
-4. `GgotgalpiDemo.xcodeproj` 열고 Signing & Capabilities에서
-   - Team = **DongYoung Kim**
-   - Bundle Identifier = `com.dahli4.ggotgalpi`
-   - Automatically manage signing 켜짐
-   - 개인 팀이나 다른 Bundle ID로 바꾸지 말 것.
-5. iPhone 연결 → Trust → 스킴 `GgotgalpiDemo`로 Run.
-6. 처음이면 아이폰 설정 → 일반 → VPN 및 기기 관리에서 개발자 앱 신뢰.
-7. 시뮬레이터만 쓸 때는 서명 신경 안 써도 됨.
-8. 앱스토어/TestFlight 업로드는 동영이 함. 친구가 Archive로 올리지 않아도 됨.
+친구가 하면 되는 것:
 
-안 되면 거의 항상 Team을 개인 계정으로 바꿔서입니다. DongYoung Kim으로 되돌리면 됩니다.
+1. GitHub는 자기 저장소 그대로.
+2. 시뮬레이터로 개발/확인.
+3. 실기기 확인은 동영이 TestFlight로 올린 빌드를 설치.
+4. Signing에서 자기 Personal Team으로 바꿔도 됨 — 그건 친구 폰에만 임시 설치되는 경로고, 스토어 배포랑은 별개.
+
+동영이 하면 되는 것:
+
+- 코드 받아서 `./scripts/upload-testflight.sh` 로 TestFlight 업로드
+- 친구를 TestFlight 테스터로 추가
+
+친구가 자기 Xcode에서 DongYoung Kim 팀으로 실기기 Run 하려면, 동영 계정을 Individual → Organization(회사/D-U-N-S)으로 바꿔야 합니다. 그 전엔 Xcode에 팀이 안 뜨는 게 정상입니다.

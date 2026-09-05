@@ -11,8 +11,8 @@
 앱스토어 배포는 친구 동영의 Apple 개발자 계정으로 한다. 나는 코드 작성 + 시뮬레이터 + 내 아이폰에서 실행만 한다.
 
 목표:
-내 저장소 설정이 동영 Apple 팀으로 실기기 실행되게 맞춰라.
-끝나면 내가 Xcode에서 아이폰에 Run만 하면 되게 해라.
+코드는 내 GitHub에서 계속 만들고, 시뮬레이터로 실행되게 유지해라.
+실기기/앱스토어 서명은 동영 개인 개발자 계정이라 내 Xcode Team에 안 뜬다. 그걸 “고치려고” 팀을 바꾸거나 새 개발자 계정을 만들지 마.
 
 고정값 (절대 바꾸지 마. 네가 “고치는” 대상이 아님):
 - GitHub 원본: https://github.com/nbyvsmn4cr-source/ggotgalpi-demo  (이 저장소 유지. 포크로 옮기지 마)
@@ -42,24 +42,17 @@
 5. 시뮬레이터 빌드가 되면 이걸로 확인:
    xcodebuild -project GgotgalpiDemo.xcodeproj -scheme GgotgalpiDemo -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build
 
-끝난 뒤 나에게는 코드 설명이 아니라, 아래를 클릭 순서 그대로 적어줘. 이 단계는 네가 대신 로그인할 수 없다.
+끝난 뒤 나에게 짧게 안내해라.
 
 내가 직접 하는 것:
-1. Xcode 연다
-2. Xcode → Settings → Accounts → Apple ID 추가
-3. writer161@live.co.kr 로 로그인 (동영 팀에 이미 초대된 메일)
-4. GgotgalpiDemo.xcodeproj 연다
-5. 왼쪽 프로젝트 → Target GgotgalpiDemo → Signing & Capabilities
-6. Team이 DongYoung Kim 인지 본다. 내 개인 이름이면 DongYoung Kim으로 바꾼다
-7. Bundle Identifier가 com.dahli4.ggotgalpi 인지 본다. 다르면 고치지 말고 너(에이전트)에게 다시 시킨다
-8. Automatically manage signing 체크
-9. 아이폰을 맥에 연결하고 Trust
-10. 상단 기기에서 내 아이폰 고르고 Run
-11. 아이폰에 “신뢰할 수 없는 개발자”가 뜨면 설정 → 일반 → VPN 및 기기 관리에서 신뢰
+1. Xcode에서 시뮬레이터로 Run
+2. Signing & Capabilities에 DongYoung Kim 팀이 없어도 정상이다. 동영 계정이 Individual(개인)이라 내 Apple ID로는 그 팀이 안 뜬다.
+3. 내 아이폰에서 보려면 동영이 TestFlight로 올린 빌드를 설치한다.
+4. 내 Personal Team으로 내 폰에 직접 깔아보는 건 선택. 그건 스토어 배포가 아니다.
 
 Done-when:
-- pbxproj에 Team 7H8779959T, Bundle com.dahli4.ggotgalpi, Automatic 이 들어있다
+- pbxproj에 Team 7H8779959T, Bundle com.dahli4.ggotgalpi, Automatic 이 들어있다 (동영이 배포할 때 쓰는 값)
 - 시뮬레이터 빌드가 통과한다
-- 위 Xcode 클릭 순서를 내가 따라 할 수 있게 한국어로 짧게 적었다
-- 배포/인증서/스토어 얘기로 옆길로 안 샜다
+- 내가 팀을 못 고르는 이유를 한 줄로 설명해 줬다
+- 배포/인증서/스토어 파이프라인을 새로 만들지 않았다
 ```
