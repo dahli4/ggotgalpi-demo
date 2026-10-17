@@ -150,6 +150,7 @@ enum ReadingRating {
 final class DemoStore: ObservableObject {
     static let trashRetentionDaysKey = "ggotgalpi.settings.trash-retention-days"
     static let defaultTrashRetentionDays = 30
+    private static let favoriteAuthorsKey = "ggotgalpi.favorite-authors.v1"
 
     static var trashRetentionDays: Int {
         let selectedDays = UserDefaults.standard.integer(forKey: trashRetentionDaysKey)
@@ -159,6 +160,7 @@ final class DemoStore: ObservableObject {
     @Published private(set) var books: [Book] = []
     @Published private(set) var entries: [ReadingEntry] = []
     @Published private(set) var trashedEntries: [ReadingEntry] = []
+    @Published private(set) var favoriteAuthorKeys: Set<String> = []
     @Published private var calendarBookOrders: [String: [UUID]] = [:]
 
     private let modelContext: ModelContext
@@ -166,6 +168,7 @@ final class DemoStore: ObservableObject {
 
     init(modelContext: ModelContext) {
         self.modelContext = modelContext
+        favoriteAuthorKeys = Set(UserDefaults.standard.stringArray(forKey: Self.favoriteAuthorsKey) ?? [])
         loadCalendarBookOrders()
         refresh()
         purgeExpiredEntries()
@@ -183,6 +186,31 @@ final class DemoStore: ObservableObject {
         entries
             .filter { $0.bookID == bookID }
             .sorted { $0.date == $1.date ? $0.createdAt > $1.createdAt : $0.date > $1.date }
+    }
+
+    func isFavoriteAuthor(_ author: String) -> Bool {
+        favoriteAuthorKeys.contains(authorKey(for: author))
+    }
+
+    func toggleFavoriteAuthor(_ author: String) {
+        let key = authorKey(for: author)
+        guard !key.isEmpty else { return }
+
+        if favoriteAuthorKeys.contains(key) {
+            favoriteAuthorKeys.remove(key)
+        } else {
+            favoriteAuthorKeys.insert(key)
+        }
+        UserDefaults.standard.set(Array(favoriteAuthorKeys), forKey: Self.favoriteAuthorsKey)
+    }
+
+    func hasSameAuthor(as book: Book, candidate: Book) -> Bool {
+        authorKey(for: book.author) == authorKey(for: candidate.author)
+    }
+
+    private func authorKey(for author: String) -> String {
+        author.trimmingCharacters(in: .whitespacesAndNewlines)
+            .folding(options: [.caseInsensitive, .diacriticInsensitive], locale: .current)
     }
 
     /// 별점을 남긴 감상 기록만으로 책의 평균 별점을 계산합니다.

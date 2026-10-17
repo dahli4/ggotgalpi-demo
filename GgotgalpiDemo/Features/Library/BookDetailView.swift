@@ -7,6 +7,7 @@ struct BookDetailView: View {
     @State private var showingAddEntry = false
     @State private var showingEditBook = false
     @State private var editingEntry: ReadingEntry?
+    @State private var selectedRelatedBook: Book?
     @State private var showingBookDeletionConfirmation = false
     @AppStorage("ggotgalpi.settings.show-publisher") private var showsPublisher = true
 
@@ -20,6 +21,12 @@ struct BookDetailView: View {
 
     private var averageRating: Double? {
         store.averageRating(for: currentBook.id)
+    }
+
+    private var sameAuthorBooks: [Book] {
+        store.books
+            .filter { $0.id != currentBook.id && store.hasSameAuthor(as: currentBook, candidate: $0) }
+            .sorted { $0.title.localizedStandardCompare($1.title) == .orderedAscending }
     }
 
     var body: some View {
@@ -46,9 +53,22 @@ struct BookDetailView: View {
                                 .buttonStyle(.plain)
                                 .accessibilityLabel("책 정보 수정")
                             }
-                            Text(currentBook.author)
-                                .font(.doveMayo(.subheadline))
-                                .foregroundStyle(GgotgalpiTheme.secondaryInk)
+                            HStack(spacing: 5) {
+                                Text(currentBook.author)
+                                    .font(.doveMayo(.subheadline))
+                                    .foregroundStyle(GgotgalpiTheme.secondaryInk)
+
+                                Button {
+                                    store.toggleFavoriteAuthor(currentBook.author)
+                                } label: {
+                                    Image(systemName: store.isFavoriteAuthor(currentBook.author) ? "star.fill" : "star")
+                                        .font(.doveMayo(.caption, bold: true))
+                                        .foregroundStyle(store.isFavoriteAuthor(currentBook.author) ? GgotgalpiTheme.accent : GgotgalpiTheme.secondaryInk)
+                                        .frame(width: 28, height: 28)
+                                }
+                                .buttonStyle(.plain)
+                                .accessibilityLabel(store.isFavoriteAuthor(currentBook.author) ? "좋아하는 작가 지정 해제" : "좋아하는 작가로 지정")
+                            }
                             if showsPublisher && !currentBook.publisher.isEmpty {
                                 Text(currentBook.publisher)
                                     .font(.doveMayo(.caption))
@@ -73,6 +93,35 @@ struct BookDetailView: View {
                         DetailStat(value: "\(bookEntries.count)", title: "감상 기록")
                         DetailStat(value: "\(Set(bookEntries.map(\.readingRound)).count)", title: "읽은 횟수")
                         DetailStat(value: bookEntries.isEmpty ? "-" : "\(bookEntries.map(\.pageTo).max() ?? 0)", title: "마지막 쪽")
+                    }
+
+                    if !sameAuthorBooks.isEmpty {
+                        SectionLabel(title: "같은 작가의 책")
+
+                        VStack(spacing: 0) {
+                            ForEach(sameAuthorBooks) { relatedBook in
+                                Button {
+                                    selectedRelatedBook = relatedBook
+                                } label: {
+                                    HStack(spacing: GgotgalpiTheme.Spacing.control) {
+                                        BookColorMark(title: relatedBook.title, color: relatedBook.coverColor, size: 36)
+                                        Text(relatedBook.title)
+                                            .font(.doveMayo(.subheadline, bold: true))
+                                            .foregroundStyle(GgotgalpiTheme.ink)
+                                        Spacer()
+                                        Image(systemName: "chevron.right")
+                                            .font(.doveMayo(.caption, bold: true))
+                                            .foregroundStyle(GgotgalpiTheme.secondaryInk)
+                                    }
+                                    .padding(.vertical, 8)
+                                }
+                                .buttonStyle(.plain)
+
+                                if relatedBook.id != sameAuthorBooks.last?.id {
+                                    DividerLine()
+                                }
+                            }
+                        }
                     }
 
                     Button {
@@ -147,6 +196,9 @@ struct BookDetailView: View {
             }
             .sheet(isPresented: $showingEditBook) {
                 EditBookView(book: currentBook)
+            }
+            .sheet(item: $selectedRelatedBook) { relatedBook in
+                BookDetailView(book: relatedBook)
             }
             .alert("책을 삭제할까요?", isPresented: $showingBookDeletionConfirmation) {
                 Button("삭제", role: .destructive) {

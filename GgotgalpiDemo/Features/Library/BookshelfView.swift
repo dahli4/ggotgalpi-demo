@@ -11,6 +11,7 @@ struct BookshelfView: View {
     @State private var selectedBook: Book?
     @State private var isSearchExpanded = false
     @State private var searchQuery = ""
+    @State private var selectedAuthorKey: String?
     @FocusState private var isSearchFieldFocused: Bool
     @AppStorage("ggotgalpi.settings.bookshelf-sort-order") private var bookshelfSortOrder = BookshelfSortOption.recentEntry.rawValue
     @AppStorage("ggotgalpi.settings.show-favorite-sentences") private var showsFavoriteSentences = true
@@ -18,7 +19,17 @@ struct BookshelfView: View {
     private var visibleBooks: [Book] {
         store.books
             .filter(matchesBookshelfFilters)
+            .filter { selectedAuthorKey == nil || normalizedAuthor($0.author) == selectedAuthorKey }
             .sorted(by: sortBooks)
+    }
+
+    private var favoriteAuthors: [FavoriteAuthor] {
+        Dictionary(grouping: store.books.filter { store.isFavoriteAuthor($0.author) }, by: { normalizedAuthor($0.author) })
+            .compactMap { key, books in
+                guard let author = books.first?.author else { return nil }
+                return FavoriteAuthor(id: key, name: author, bookCount: books.count)
+            }
+            .sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
     }
 
     private var selectedSortOption: BookshelfSortOption {
@@ -43,7 +54,13 @@ struct BookshelfView: View {
     private func matchesBookshelfFilters(_ book: Book) -> Bool {
         let matchesStatus = selectedReadingStatus == .all || book.readingStatus == selectedReadingStatus
         let matchesCategory = selectedCategory == .all || book.category == selectedCategory
-        return matchesStatus && matchesCategory
+        let matchesAuthor = selectedAuthorKey == nil || normalizedAuthor(book.author) == selectedAuthorKey
+        return matchesStatus && matchesCategory && matchesAuthor
+    }
+
+    private func normalizedAuthor(_ author: String) -> String {
+        author.trimmingCharacters(in: .whitespacesAndNewlines)
+            .folding(options: [.caseInsensitive, .diacriticInsensitive], locale: .current)
     }
 
     private var hasSearchTerm: Bool {
@@ -51,13 +68,14 @@ struct BookshelfView: View {
     }
 
     private var hasActiveFilter: Bool {
-        selectedReadingStatus != .all || selectedCategory != .all
+        selectedReadingStatus != .all || selectedCategory != .all || selectedAuthorKey != nil
     }
 
     private var filterSummary: String {
         [
             selectedReadingStatus == .all ? nil : selectedReadingStatus.rawValue,
-            selectedCategory == .all ? nil : selectedCategory.rawValue
+            selectedCategory == .all ? nil : selectedCategory.rawValue,
+            favoriteAuthors.first(where: { $0.id == selectedAuthorKey })?.name
         ]
         .compactMap { $0 }
         .joined(separator: " · ")
@@ -88,7 +106,12 @@ struct BookshelfView: View {
                                 .buttonStyle(.plain)
                             }
 
-                            SectionLabel(title: "나의 책장")
+                            NavigationLink {
+                                AllBooksView()
+                            } label: {
+                                SectionPageLinkLabel(title: "나의 책장")
+                            }
+                            .buttonStyle(.plain)
 
                             LazyVStack(spacing: 0) {
                                 ForEach(visibleBooks) { book in
@@ -107,6 +130,43 @@ struct BookshelfView: View {
                                         DividerLine()
                                     }
                                 }
+                            }
+
+                            NavigationLink {
+                                FavoriteAuthorsView()
+                            } label: {
+                                SectionPageLinkLabel(title: "좋아하는 작가")
+                            }
+                            .buttonStyle(.plain)
+
+                            if favoriteAuthors.isEmpty {
+                                Text("책 상세에서 작가 이름 옆 별을 눌러 좋아하는 작가를 모아보세요.")
+                                    .font(.doveMayo(.subheadline))
+                                    .foregroundStyle(GgotgalpiTheme.secondaryInk)
+                            } else {
+                                ScrollView(.horizontal) {
+                                    HStack(spacing: GgotgalpiTheme.Spacing.compact) {
+                                        ForEach(favoriteAuthors) { author in
+                                            Button {
+                                                selectedAuthorKey = selectedAuthorKey == author.id ? nil : author.id
+                                            } label: {
+                                                VStack(alignment: .leading, spacing: 3) {
+                                                    Label(author.name, systemImage: selectedAuthorKey == author.id ? "star.fill" : "star")
+                                                        .font(.doveMayo(.subheadline, bold: true))
+                                                    Text("책 \(author.bookCount)권")
+                                                        .font(.doveMayo(.caption))
+                                                }
+                                                .foregroundStyle(selectedAuthorKey == author.id ? GgotgalpiTheme.paper : GgotgalpiTheme.ink)
+                                                .padding(.horizontal, GgotgalpiTheme.Spacing.content)
+                                                .padding(.vertical, GgotgalpiTheme.Spacing.control)
+                                                .background(selectedAuthorKey == author.id ? GgotgalpiTheme.accent : GgotgalpiTheme.paperDeep)
+                                                .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                                            }
+                                            .buttonStyle(.plain)
+                                        }
+                                    }
+                                }
+                                .scrollIndicators(.hidden)
                             }
                         }
                     }
@@ -428,6 +488,109 @@ struct CategoryPicker: View {
             }
             .pickerStyle(.segmented)
         }
+    }
+}
+
+private struct FavoriteAuthor: Identifiable {
+    let id: String
+    let name: String
+    let bookCount: Int
+}
+
+private struct SectionPageLinkLabel: View {
+    let title: String
+
+    var body: some View {
+        HStack {
+            Text(title)
+                .font(.doveMayo(.headline, bold: true))
+                .foregroundStyle(GgotgalpiTheme.ink)
+            Spacer()
+        }
+        .contentShape(Rectangle())
+    }
+}
+
+private struct AllBooksView: View {
+    @EnvironmentObject private var store: DemoStore
+
+    private var books: [Book] {
+        store.books.sorted { $0.title.localizedStandardCompare($1.title) == .orderedAscending }
+    }
+
+    var body: some View {
+        List(books) { book in
+            NavigationLink {
+                BookDetailView(book: book)
+            } label: {
+                BookCard(
+                    book: book,
+                    entryCount: store.entries(for: book.id).count,
+                    averageRating: store.averageRating(for: book.id)
+                )
+            }
+            .listRowBackground(GgotgalpiTheme.paper)
+        }
+        .scrollContentBackground(.hidden)
+        .background(GgotgalpiTheme.paper)
+        .navigationTitle("나의 책장")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+private struct FavoriteAuthorsView: View {
+    @EnvironmentObject private var store: DemoStore
+
+    private var authors: [FavoriteAuthor] {
+        Dictionary(grouping: store.books.filter { store.isFavoriteAuthor($0.author) }, by: { normalizedAuthor($0.author) })
+            .compactMap { key, books in
+                guard let author = books.first?.author else { return nil }
+                return FavoriteAuthor(id: key, name: author, bookCount: books.count)
+            }
+            .sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
+    }
+
+    var body: some View {
+        List {
+            if authors.isEmpty {
+                Text("책 상세에서 작가 이름 옆 별을 눌러 좋아하는 작가를 지정해 보세요.")
+                    .font(.doveMayo(.subheadline))
+                    .foregroundStyle(GgotgalpiTheme.secondaryInk)
+                    .listRowBackground(GgotgalpiTheme.paper)
+            } else {
+                ForEach(authors) { author in
+                    Section(author.name) {
+                        ForEach(books(for: author)) { book in
+                            NavigationLink {
+                                BookDetailView(book: book)
+                            } label: {
+                                BookCard(
+                                    book: book,
+                                    entryCount: store.entries(for: book.id).count,
+                                    averageRating: store.averageRating(for: book.id)
+                                )
+                            }
+                            .listRowBackground(GgotgalpiTheme.paper)
+                        }
+                    }
+                }
+            }
+        }
+        .scrollContentBackground(.hidden)
+        .background(GgotgalpiTheme.paper)
+        .navigationTitle("좋아하는 작가")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+
+    private func books(for author: FavoriteAuthor) -> [Book] {
+        store.books
+            .filter { normalizedAuthor($0.author) == author.id }
+            .sorted { $0.title.localizedStandardCompare($1.title) == .orderedAscending }
+    }
+
+    private func normalizedAuthor(_ author: String) -> String {
+        author.trimmingCharacters(in: .whitespacesAndNewlines)
+            .folding(options: [.caseInsensitive, .diacriticInsensitive], locale: .current)
     }
 }
 
