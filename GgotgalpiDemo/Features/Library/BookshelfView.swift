@@ -184,10 +184,10 @@ struct BookshelfView: View {
                     .padding(.horizontal, GgotgalpiTheme.Spacing.screen)
                     .padding(.vertical, GgotgalpiTheme.Spacing.content)
                 }
-                .background {
-                    Color.clear
-                        .contentShape(Rectangle())
-                        .onTapGesture { closeSearch() }
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    guard isSearchExpanded else { return }
+                    closeSearch()
                 }
                 .onChange(of: scrollToTopID) {
                     withAnimation(.easeOut(duration: 0.3)) {

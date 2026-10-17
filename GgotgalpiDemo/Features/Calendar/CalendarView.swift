@@ -145,10 +145,10 @@ struct CalendarView: View {
                 // 하단 플로팅 독에 마지막 요약 항목이 가려지지 않도록 스크롤 여유를 둡니다.
                     .padding(.bottom, GgotgalpiTheme.Spacing.largeSection * 3)
                 }
-                .background {
-                    Color.clear
-                        .contentShape(Rectangle())
-                        .onTapGesture { closeSearch() }
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    guard isSearchExpanded else { return }
+                    closeSearch()
                 }
                 .onChange(of: scrollToTopID) {
                     withAnimation(.easeOut(duration: 0.3)) {
