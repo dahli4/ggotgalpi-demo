@@ -3,6 +3,7 @@ import SwiftUI
 struct AddBookView: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var store: DemoStore
+    var onBookAdded: ((Book) -> Void)? = nil
     @State private var title = ""
     @State private var author = ""
     @State private var publisher = ""
@@ -36,8 +37,9 @@ struct AddBookView: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("저장") {
-                        store.addBook(title: title, author: author, publisher: publisher, category: category)
+                        let book = store.addBook(title: title, author: author, publisher: publisher, category: category)
                         dismiss()
+                        onBookAdded?(book)
                     }
                     .disabled(title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                 }
@@ -143,6 +145,12 @@ struct AddReadingEntryView: View {
     @State private var hasInitializedValues = false
     @State private var showingEntryDeletionConfirmation = false
     @FocusState private var focusedWritingField: WritingField?
+
+    init(book: Book, editingEntry: ReadingEntry?, initialDate: Date = Date()) {
+        self.book = book
+        self.editingEntry = editingEntry
+        _date = State(initialValue: Calendar.current.startOfDay(for: initialDate))
+    }
 
     private var trimmedFavoriteSentence: String {
         favoriteSentence.trimmingCharacters(in: .whitespacesAndNewlines)

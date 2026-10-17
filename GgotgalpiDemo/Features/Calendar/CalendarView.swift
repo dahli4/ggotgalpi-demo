@@ -620,6 +620,8 @@ private struct CalendarDayEntriesSheet: View {
     @State private var editingEntry: CalendarDayEntryEditRequest?
     @State private var editingBook: Book?
     @State private var showingAddBook = false
+    @State private var newlyAddedBook: Book?
+    @State private var bookForNewEntry: Book?
 
     let date: Date
     let entries: [ReadingEntry]
@@ -717,8 +719,17 @@ private struct CalendarDayEntriesSheet: View {
             .sheet(item: $editingBook) { book in
                 EditBookView(book: book)
             }
-            .sheet(isPresented: $showingAddBook) {
-                AddBookView()
+            .sheet(isPresented: $showingAddBook, onDismiss: {
+                guard let newlyAddedBook else { return }
+                self.newlyAddedBook = nil
+                bookForNewEntry = newlyAddedBook
+            }) {
+                AddBookView { book in
+                    newlyAddedBook = book
+                }
+            }
+            .sheet(item: $bookForNewEntry) { book in
+                AddReadingEntryView(book: book, editingEntry: nil, initialDate: date)
             }
             .overlay(alignment: .bottomTrailing) {
                 if entries.isEmpty {

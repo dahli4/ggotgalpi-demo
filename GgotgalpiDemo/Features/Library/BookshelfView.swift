@@ -23,6 +23,11 @@ struct BookshelfView: View {
             .sorted(by: sortBooks)
     }
 
+    /// 메인 책장에는 최신 정렬 기준의 세 권만 미리 보여주고, 전체 목록은 '나의 책장'에서 확인합니다.
+    private var bookshelfPreviewBooks: [Book] {
+        Array(visibleBooks.prefix(3))
+    }
+
     private var favoriteAuthors: [FavoriteAuthor] {
         Dictionary(grouping: store.books.filter { store.isFavoriteAuthor($0.author) }, by: { normalizedAuthor($0.author) })
             .compactMap { key, books in
@@ -114,7 +119,7 @@ struct BookshelfView: View {
                             .buttonStyle(.plain)
 
                             LazyVStack(spacing: 0) {
-                                ForEach(visibleBooks) { book in
+                                ForEach(bookshelfPreviewBooks) { book in
                                     Button {
                                         selectedBook = book
                                     } label: {
@@ -126,7 +131,7 @@ struct BookshelfView: View {
                                     }
                                     .buttonStyle(.plain)
 
-                                    if book.id != visibleBooks.last?.id {
+                                    if book.id != bookshelfPreviewBooks.last?.id {
                                         DividerLine()
                                     }
                                 }

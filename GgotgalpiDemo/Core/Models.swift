@@ -228,7 +228,8 @@ final class DemoStore: ObservableObject {
         return entries.filter { calendar.isDate($0.date, inSameDayAs: date) }
     }
 
-    func addBook(title: String, author: String, publisher: String = "", category: BookCategory) {
+    @discardableResult
+    func addBook(title: String, author: String, publisher: String = "", category: BookCategory) -> Book {
         let book = Book(
             title: title,
             author: author,
@@ -238,6 +239,7 @@ final class DemoStore: ObservableObject {
         )
         modelContext.insert(book)
         saveChanges()
+        return book
     }
 
     func addEntry(
