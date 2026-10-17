@@ -34,6 +34,13 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             build
 
+      - name: Validate bundled privacy manifest
+        run: |
+          manifest=".derivedData/Build/Products/Debug-iphonesimulator/GgotgalpiDemo.app/PrivacyInfo.xcprivacy"
+          plutil -lint "$manifest"
+          test "$(plutil -extract NSPrivacyAccessedAPITypes.0.NSPrivacyAccessedAPIType raw "$manifest")" = NSPrivacyAccessedAPICategoryUserDefaults
+          test "$(plutil -extract NSPrivacyAccessedAPITypes.0.NSPrivacyAccessedAPITypeReasons.0 raw "$manifest")" = CA92.1
+
       - name: Test synced settings and model store
         run: |
           build_dir="$(mktemp -d)"
