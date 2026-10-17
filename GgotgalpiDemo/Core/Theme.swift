@@ -39,6 +39,9 @@ enum GgotgalpiTheme {
     // 월간 달력의 가로·세로 격자에만 쓰는 은은한 웜 그레이입니다.
     static let calendarGridLine = Color(red: 0.875, green: 0.847, blue: 0.796)
     static let accent = Color(red: 0.46, green: 0.43, blue: 0.36)
+    // 좋아하는 작가 카드 전용: 기존 베이지·갈색 대신 중립적인 회색 계열을 사용합니다.
+    static let favoriteAuthorCard = Color.white
+    static let favoriteAuthorSelected = Color(white: 0.90)
 
     enum Spacing {
         static let compact: CGFloat = 8

@@ -156,15 +156,15 @@ struct BookshelfView: View {
                                                 selectedAuthorKey = selectedAuthorKey == author.id ? nil : author.id
                                             } label: {
                                                 VStack(alignment: .leading, spacing: 3) {
-                                                    Label(author.name, systemImage: selectedAuthorKey == author.id ? "star.fill" : "star")
+                                                    Text(author.name)
                                                         .font(.doveMayo(.subheadline, bold: true))
                                                     Text("책 \(author.bookCount)권")
                                                         .font(.doveMayo(.caption))
                                                 }
-                                                .foregroundStyle(selectedAuthorKey == author.id ? GgotgalpiTheme.paper : GgotgalpiTheme.ink)
+                                                .foregroundStyle(GgotgalpiTheme.ink)
                                                 .padding(.horizontal, GgotgalpiTheme.Spacing.content)
                                                 .padding(.vertical, GgotgalpiTheme.Spacing.control)
-                                                .background(selectedAuthorKey == author.id ? GgotgalpiTheme.accent : GgotgalpiTheme.paperDeep)
+                                                .background(selectedAuthorKey == author.id ? GgotgalpiTheme.favoriteAuthorSelected : GgotgalpiTheme.favoriteAuthorCard)
                                                 .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
                                             }
                                             .buttonStyle(.plain)

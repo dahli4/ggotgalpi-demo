@@ -192,7 +192,7 @@ struct CalendarView: View {
         .sheet(item: $dayEntriesRequest) { request in
             CalendarDayEntriesSheet(
                 date: request.date,
-                entries: entries(on: request.date),
+                entriesForDate: { entries(on: request.date) },
                 orderedBooks: books(on: request.date),
                 saveOrder: { bookIDs in
                     store.saveCalendarBookOrder(bookIDs, for: request.date)
@@ -624,19 +624,23 @@ private struct CalendarDayEntriesSheet: View {
     @State private var bookForNewEntry: Book?
 
     let date: Date
-    let entries: [ReadingEntry]
+    let entriesForDate: () -> [ReadingEntry]
     let saveOrder: ([UUID]) -> Void
 
     init(
         date: Date,
-        entries: [ReadingEntry],
+        entriesForDate: @escaping () -> [ReadingEntry],
         orderedBooks: [Book],
         saveOrder: @escaping ([UUID]) -> Void
     ) {
         self.date = date
-        self.entries = entries
+        self.entriesForDate = entriesForDate
         self.saveOrder = saveOrder
         _books = State(initialValue: orderedBooks)
+    }
+
+    private var entries: [ReadingEntry] {
+        entriesForDate()
     }
 
     private var canReorder: Bool {
@@ -731,6 +735,9 @@ private struct CalendarDayEntriesSheet: View {
             .sheet(item: $bookForNewEntry) { book in
                 AddReadingEntryView(book: book, editingEntry: nil, initialDate: date)
             }
+            .onChange(of: entries.map(\.id)) {
+                appendNewBooksForRecordedEntries()
+            }
             .overlay(alignment: .bottomTrailing) {
                 if entries.isEmpty {
                     Button {
@@ -751,6 +758,16 @@ private struct CalendarDayEntriesSheet: View {
             }
         }
         .paperBackground()
+    }
+
+    private func appendNewBooksForRecordedEntries() {
+        let visibleBookIDs = Set(books.map(\.id))
+        let newBooks = entries
+            .compactMap { store.book(for: $0.bookID) }
+            .filter { !visibleBookIDs.contains($0.id) }
+
+        guard !newBooks.isEmpty else { return }
+        books.append(contentsOf: newBooks)
     }
 }
 
@@ -841,6 +858,16 @@ private struct CalendarDayBookEntryRow: View {
                     }
                 }
             }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        // 표지·하트 등 자체 동작이 있는 요소는 유지하고, 카드의 빈 영역은 최신 감상 기록 편집으로 연결합니다.
+        .background {
+            Color.clear
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    guard let entry = entries.first else { return }
+                    editEntry(entry)
+                }
         }
         .padding(.vertical, 4)
         .accessibilityElement(children: .combine)
