@@ -237,17 +237,17 @@ struct AddReadingEntryView: View {
                 .scrollContentBackground(.hidden)
                 .scrollDismissesKeyboard(.interactively)
                 .background(GgotgalpiTheme.paper)
-                .onChange(of: focusedWritingField) { field in
-                    guard let field else { return }
+                .onChange(of: focusedWritingField) {
+                    guard let field = focusedWritingField else { return }
                     scrollWritingFieldIntoView(field, with: proxy, animated: true)
                 }
                 // TextEditor는 긴 글에서 내부적으로만 스크롤됩니다. 입력할 때마다
                 // Form도 함께 조정해 편집기 자체가 키보드 아래로 내려가지 않게 합니다.
-                .onChange(of: note) { _ in
+                .onChange(of: note) {
                     guard focusedWritingField == .note else { return }
                     scrollWritingFieldIntoView(.note, with: proxy)
                 }
-                .onChange(of: favoriteSentence) { _ in
+                .onChange(of: favoriteSentence) {
                     guard focusedWritingField == .favoriteSentence else { return }
                     scrollWritingFieldIntoView(.favoriteSentence, with: proxy)
                 }
