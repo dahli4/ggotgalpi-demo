@@ -179,7 +179,7 @@ struct TrashView: View {
         .scrollIndicators(.hidden)
         .navigationTitle("휴지통")
         .navigationBarTitleDisplayMode(.inline)
-        .paperBackground()
+        .background(GgotgalpiTheme.calendarCanvas.ignoresSafeArea())
         .task {
             store.purgeExpiredEntries()
         }

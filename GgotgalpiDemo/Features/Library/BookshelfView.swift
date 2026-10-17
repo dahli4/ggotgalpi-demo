@@ -529,10 +529,10 @@ private struct AllBooksView: View {
                     averageRating: store.averageRating(for: book.id)
                 )
             }
-            .listRowBackground(GgotgalpiTheme.paper)
+            .listRowBackground(GgotgalpiTheme.calendarCanvas)
         }
         .scrollContentBackground(.hidden)
-        .background(GgotgalpiTheme.paper)
+        .background(GgotgalpiTheme.calendarCanvas)
         .navigationTitle("나의 책장")
         .navigationBarTitleDisplayMode(.inline)
     }
@@ -556,7 +556,7 @@ private struct FavoriteAuthorsView: View {
                 Text("책 상세에서 작가 이름 옆 별을 눌러 좋아하는 작가를 지정해 보세요.")
                     .font(.doveMayo(.subheadline))
                     .foregroundStyle(GgotgalpiTheme.secondaryInk)
-                    .listRowBackground(GgotgalpiTheme.paper)
+                    .listRowBackground(GgotgalpiTheme.calendarCanvas)
             } else {
                 ForEach(authors) { author in
                     Section(author.name) {
@@ -570,14 +570,14 @@ private struct FavoriteAuthorsView: View {
                                     averageRating: store.averageRating(for: book.id)
                                 )
                             }
-                            .listRowBackground(GgotgalpiTheme.paper)
+                            .listRowBackground(GgotgalpiTheme.calendarCanvas)
                         }
                     }
                 }
             }
         }
         .scrollContentBackground(.hidden)
-        .background(GgotgalpiTheme.paper)
+        .background(GgotgalpiTheme.calendarCanvas)
         .navigationTitle("좋아하는 작가")
         .navigationBarTitleDisplayMode(.inline)
     }
