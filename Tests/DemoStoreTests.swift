@@ -45,6 +45,12 @@ struct DemoStoreTests {
             )
         }
 
+        try check(
+            store.books.isEmpty && store.entries.isEmpty,
+            "opening an empty store must not create sample books or entries"
+        )
+        print("PASS an empty cloud-backed store stays empty")
+
         let book = store.addBook(title: "동기화 검증", author: "검증 작가", category: .literature)
         store.addEntry(
             bookID: book.id, date: Date(), pageFrom: 4, pageTo: 18,
@@ -118,6 +124,6 @@ struct DemoStoreTests {
         store.refresh()
         try check(store.book(for: importedBook.id) != nil, "refresh missed an imported book")
         print("PASS refresh includes records saved by another context")
-        print("PASS all 6 DemoStore integration scenarios")
+        print("PASS all 7 DemoStore integration scenarios")
     }
 }

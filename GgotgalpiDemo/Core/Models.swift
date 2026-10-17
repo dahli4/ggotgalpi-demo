@@ -184,7 +184,8 @@ final class DemoStore: ObservableObject {
         refresh()
         purgeExpiredEntries()
 
-        if books.isEmpty {
+        // 빈 iCloud 저장소는 내려받기 전일 수도 있습니다. 예제는 QA에서만 명시적으로 넣습니다.
+        if books.isEmpty && ProcessInfo.processInfo.arguments.contains("-seed-sample-data") {
             seedSampleData()
         }
     }
