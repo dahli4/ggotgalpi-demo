@@ -32,7 +32,13 @@ final class Book {
     private var readingStatusRawValue: String = ReadingStatus.wantToRead.rawValue
     private var coverColorIndex: Int = 0
     var isHiddenFromCalendar: Bool = false
-    @Relationship(deleteRule: .cascade, inverse: \ReadingEntry.book) var entries: [ReadingEntry] = []
+    @Relationship(deleteRule: .cascade, inverse: \ReadingEntry.book) var entries: [ReadingEntry]? = []
+
+    // 저장 관계 이름을 유지해 기존 로컬 기록을 그대로 마이그레이션합니다.
+    var readingEntries: [ReadingEntry] {
+        get { entries ?? [] }
+        set { entries = newValue }
+    }
 
     var category: BookCategory {
         get { BookCategory(rawValue: categoryRawValue) ?? .literature }
