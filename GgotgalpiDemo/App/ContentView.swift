@@ -299,6 +299,7 @@ struct ContentView: View {
 
     private var settingsDockButton: some View {
         Button {
+            resetSearches()
             withAnimation(.easeInOut(duration: 0.32)) {
                 if isShowingSettings {
                     isShowingSettingsDetail = false
@@ -328,6 +329,9 @@ struct ContentView: View {
 
     /// 투명 글라스 선택 캡슐을 다른 탭으로 부드럽게 이동시킵니다.
     private func activateTab(_ tab: Tab) {
+        // 다른 탭이나 설정으로 이동한 뒤 돌아왔을 때, 이전 화면의 검색창이 남아 있지 않게 합니다.
+        resetSearches()
+
         if isShowingSettings {
             if tab == .calendar, selectedTab != .calendar {
                 calendarPastHighlightRefreshID += 1
@@ -345,10 +349,8 @@ struct ContentView: View {
         guard selectedTab != tab else {
             switch tab {
             case .calendar:
-                calendarSearchResetID += 1
                 calendarScrollToTopID += 1
             case .bookshelf:
-                bookshelfSearchResetID += 1
                 bookshelfScrollToTopID += 1
             }
             return
@@ -369,6 +371,11 @@ struct ContentView: View {
             isShowingSettings = false
             isShowingSettingsDetail = false
         }
+    }
+
+    private func resetSearches() {
+        calendarSearchResetID += 1
+        bookshelfSearchResetID += 1
     }
 }
 

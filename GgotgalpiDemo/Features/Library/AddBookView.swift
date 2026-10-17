@@ -214,7 +214,11 @@ struct AddReadingEntryView: View {
 
                     Section {
                         Button {
-                            hasFinishedReadingRound.toggle()
+                            let isFinishingCurrentRound = !hasFinishedReadingRound
+                            hasFinishedReadingRound = isFinishingCurrentRound
+                            if isFinishingCurrentRound {
+                                readingRound += 1
+                            }
                         } label: {
                             HStack(spacing: GgotgalpiTheme.Spacing.control) {
                                 Image(systemName: hasFinishedReadingRound ? "checkmark.square.fill" : "square")
