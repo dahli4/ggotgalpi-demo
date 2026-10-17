@@ -112,15 +112,18 @@ struct CalendarView: View {
                                 selectedDate: $selectedDate,
                                 books: { books(on: $0) },
                                 selectDate: { date in
+                                    closeSearch()
                                     let selectedDay = Calendar.current.startOfDay(for: date)
                                     selectedDate = selectedDay
                                     dayEntriesRequest = CalendarDayEntriesRequest(date: selectedDay)
                                 },
                                 requestReorder: { date in
+                                    closeSearch()
                                     let books = books(on: date)
                                     guard books.count > 1 else { return }
                                     reorderRequest = CalendarBookReorderRequest(date: date, books: books)
-                                }
+                                },
+                                onInteraction: closeSearch
                             )
 
                             CalendarMonthlySummary(
@@ -141,6 +144,11 @@ struct CalendarView: View {
                 .padding(.top, GgotgalpiTheme.Spacing.control + GgotgalpiTheme.Spacing.largeSection + GgotgalpiTheme.Spacing.content + GgotgalpiTheme.Spacing.compact)
                 // 하단 플로팅 독에 마지막 요약 항목이 가려지지 않도록 스크롤 여유를 둡니다.
                     .padding(.bottom, GgotgalpiTheme.Spacing.largeSection * 3)
+                }
+                .background {
+                    Color.clear
+                        .contentShape(Rectangle())
+                        .onTapGesture { closeSearch() }
                 }
                 .onChange(of: scrollToTopID) {
                     withAnimation(.easeOut(duration: 0.3)) {
@@ -247,6 +255,7 @@ struct CalendarView: View {
 
     private var filterButton: some View {
         Button {
+            closeSearch()
             isShowingFilters = true
         } label: {
             Image(systemName: "line.3.horizontal.decrease.circle")
@@ -880,6 +889,7 @@ private struct MonthlyCalendarGrid: View {
     let books: (Date) -> [Book]
     let selectDate: (Date) -> Void
     let requestReorder: (Date) -> Void
+    let onInteraction: () -> Void
     @State private var isShowingMonthPicker = false
 
     private let calendar = Calendar.current
@@ -919,6 +929,7 @@ private struct MonthlyCalendarGrid: View {
             VStack(spacing: GgotgalpiTheme.Spacing.control) {
                 HStack {
                     Button {
+                        onInteraction()
                         displayedMonth = calendar.date(byAdding: .month, value: -1, to: displayedMonth) ?? displayedMonth
                     } label: {
                         Image(systemName: "chevron.left")
@@ -928,6 +939,7 @@ private struct MonthlyCalendarGrid: View {
                     Spacer()
 
                     Button {
+                        onInteraction()
                         isShowingMonthPicker = true
                     } label: {
                         Text(monthTitle)
@@ -940,6 +952,7 @@ private struct MonthlyCalendarGrid: View {
                     Spacer()
 
                     Button {
+                        onInteraction()
                         displayedMonth = calendar.date(byAdding: .month, value: 1, to: displayedMonth) ?? displayedMonth
                     } label: {
                         Image(systemName: "chevron.right")

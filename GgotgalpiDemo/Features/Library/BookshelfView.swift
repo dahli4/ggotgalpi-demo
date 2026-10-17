@@ -109,6 +109,7 @@ struct BookshelfView: View {
                                     )
                                 }
                                 .buttonStyle(.plain)
+                                .simultaneousGesture(TapGesture().onEnded { closeSearch() })
                             }
 
                             NavigationLink {
@@ -117,10 +118,12 @@ struct BookshelfView: View {
                                 SectionPageLinkLabel(title: "나의 책장")
                             }
                             .buttonStyle(.plain)
+                            .simultaneousGesture(TapGesture().onEnded { closeSearch() })
 
                             LazyVStack(spacing: 0) {
                                 ForEach(bookshelfPreviewBooks) { book in
                                     Button {
+                                        closeSearch()
                                         selectedBook = book
                                     } label: {
                                         BookCard(
@@ -143,6 +146,7 @@ struct BookshelfView: View {
                                 SectionPageLinkLabel(title: "좋아하는 작가")
                             }
                             .buttonStyle(.plain)
+                            .simultaneousGesture(TapGesture().onEnded { closeSearch() })
 
                             if favoriteAuthors.isEmpty {
                                 Text("책 상세에서 작가 이름 옆 별을 눌러 좋아하는 작가를 모아보세요.")
@@ -153,6 +157,7 @@ struct BookshelfView: View {
                                     HStack(spacing: GgotgalpiTheme.Spacing.compact) {
                                         ForEach(favoriteAuthors) { author in
                                             Button {
+                                                closeSearch()
                                                 selectedAuthorKey = selectedAuthorKey == author.id ? nil : author.id
                                             } label: {
                                                 VStack(alignment: .leading, spacing: 3) {
@@ -178,6 +183,11 @@ struct BookshelfView: View {
                     .id("bookshelf-scroll-top")
                     .padding(.horizontal, GgotgalpiTheme.Spacing.screen)
                     .padding(.vertical, GgotgalpiTheme.Spacing.content)
+                }
+                .background {
+                    Color.clear
+                        .contentShape(Rectangle())
+                        .onTapGesture { closeSearch() }
                 }
                 .onChange(of: scrollToTopID) {
                     withAnimation(.easeOut(duration: 0.3)) {
@@ -207,6 +217,7 @@ struct BookshelfView: View {
                 }
                 .overlay(alignment: .bottomTrailing) {
                     Button {
+                        closeSearch()
                         showingAddBook = true
                     } label: {
                         Image(systemName: "plus")
@@ -286,12 +297,14 @@ struct BookshelfView: View {
                 .frame(width: 40, height: 40)
         }
         .buttonStyle(.plain)
+        .simultaneousGesture(TapGesture().onEnded { closeSearch() })
         .accessibilityLabel("휴지통")
         .accessibilityValue(store.trashedEntries.isEmpty ? "비어 있음" : "\(store.trashedEntries.count)개")
     }
 
     private var bookshelfFilterButton: some View {
         Button {
+            closeSearch()
             isShowingFilters = true
         } label: {
             Image(systemName: "line.3.horizontal.decrease.circle")
