@@ -39,24 +39,24 @@ struct MyRecordView: View {
                                 VStack(alignment: .leading, spacing: GgotgalpiTheme.Spacing.compact) {
                                     HStack {
                                         Text(book.title)
-                                            .font(.headline)
+                                            .font(.doveMayo(.headline, bold: true))
                                             .foregroundStyle(GgotgalpiTheme.ink)
 
                                         Spacer()
 
                                         Text(entry.date.shortKoreanDate)
-                                            .font(.caption2)
+                                            .font(.doveMayo(.caption2))
                                             .foregroundStyle(GgotgalpiTheme.secondaryInk)
                                     }
 
                                     Text(entry.note)
-                                        .font(.subheadline)
+                                        .font(.doveMayo(size: 16))
                                         .foregroundStyle(GgotgalpiTheme.secondaryInk)
                                         .fixedSize(horizontal: false, vertical: true)
 
                                     if !entry.favoriteSentence.isEmpty {
                                         Text("“\(entry.favoriteSentence)”")
-                                            .font(.caption)
+                                            .font(.doveMayo(size: 14, bold: true))
                                             .foregroundStyle(GgotgalpiTheme.ink)
                                             .italic()
                                             .fixedSize(horizontal: false, vertical: true)
@@ -68,7 +68,7 @@ struct MyRecordView: View {
                                     showingEntryDeletionConfirmation = true
                                 } label: {
                                     Image(systemName: "trash")
-                                        .font(.caption.weight(.semibold))
+                                        .font(.doveMayo(.caption, bold: true))
                                         .foregroundStyle(GgotgalpiTheme.secondaryInk)
                                         .frame(width: 32, height: 32)
                                         .contentShape(Rectangle())
@@ -140,7 +140,7 @@ struct TrashView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: GgotgalpiTheme.Spacing.section) {
                 Text("휴지통의 감상 기록은 이동한 날부터 \(trashRetentionDays)일 동안 보관됩니다. 이후 자동으로 영구 삭제됩니다.")
-                    .font(.subheadline)
+                    .font(.doveMayo(.subheadline))
                     .foregroundStyle(GgotgalpiTheme.secondaryInk)
                     .fixedSize(horizontal: false, vertical: true)
 
@@ -212,27 +212,27 @@ private struct TrashEntryRow: View {
                 VStack(alignment: .leading, spacing: GgotgalpiTheme.Spacing.compact) {
                     HStack(alignment: .firstTextBaseline) {
                         Text(book.title)
-                            .font(.headline)
+                            .font(.doveMayo(.headline, bold: true))
                             .foregroundStyle(GgotgalpiTheme.ink)
 
                         Spacer(minLength: 8)
 
                         Text(entry.date.shortKoreanDate)
-                            .font(.caption2)
+                            .font(.doveMayo(.caption2))
                             .foregroundStyle(GgotgalpiTheme.secondaryInk)
                     }
 
                     Text(entry.note)
-                        .font(.subheadline)
+                        .font(.doveMayo(size: 16))
                         .foregroundStyle(GgotgalpiTheme.secondaryInk)
                         .lineLimit(3)
 
                     Text("삭제 시각 · \(deletedAt.koreanDateTime)")
-                        .font(.caption)
+                        .font(.doveMayo(.caption))
                         .foregroundStyle(GgotgalpiTheme.secondaryInk)
 
                     Text(daysRemaining == 0 ? "오늘 자동 영구 삭제" : "자동 영구 삭제까지 \(daysRemaining)일 남음")
-                        .font(.caption.weight(.semibold))
+                        .font(.doveMayo(.caption, bold: true))
                         .foregroundStyle(daysRemaining <= 3 ? .red : GgotgalpiTheme.accent)
                 }
             }
@@ -262,11 +262,11 @@ struct StatCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: GgotgalpiTheme.Spacing.compact) {
             Text(value)
-                .font(.title2.weight(.semibold))
+                .font(.doveMayo(.title2, bold: true))
                 .foregroundStyle(GgotgalpiTheme.ink)
 
             Text(title)
-                .font(.caption)
+                .font(.doveMayo(.caption))
                 .foregroundStyle(GgotgalpiTheme.secondaryInk)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -293,7 +293,7 @@ struct FavoriteSentencesView: View {
                     )
                 } else {
                     Text("\(savedEntries.count)개의 문장")
-                        .font(.subheadline)
+                        .font(.doveMayo(.subheadline))
                         .foregroundStyle(GgotgalpiTheme.secondaryInk)
 
                     LazyVStack(spacing: 0) {
@@ -325,25 +325,25 @@ struct FavoriteSentencesShortcut: View {
     var body: some View {
         HStack(spacing: GgotgalpiTheme.Spacing.control) {
             Image(systemName: "quote.opening")
-                .font(.title3.weight(.semibold))
+                .font(.doveMayo(.title3, bold: true))
                 .foregroundStyle(GgotgalpiTheme.accent)
                 .frame(width: 38, height: 38)
                 .background(GgotgalpiTheme.paperDeep, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
 
             VStack(alignment: .leading, spacing: 3) {
                 Text("마음에 드는 문장")
-                    .font(.headline)
+                    .font(.doveMayo(.headline, bold: true))
                     .foregroundStyle(GgotgalpiTheme.ink)
 
                 Text(sentenceCount == 0 ? "기억하고 싶은 문장을 모아보세요." : "\(sentenceCount)개의 문장을 모아두었어요.")
-                    .font(.caption)
+                    .font(.doveMayo(.caption))
                     .foregroundStyle(GgotgalpiTheme.secondaryInk)
             }
 
             Spacer(minLength: 8)
 
             Image(systemName: "chevron.right")
-                .font(.caption.weight(.semibold))
+                .font(.doveMayo(.caption, bold: true))
                 .foregroundStyle(GgotgalpiTheme.secondaryInk)
         }
         .padding(GgotgalpiTheme.Spacing.content)
@@ -366,18 +366,18 @@ struct FavoriteSentenceRow: View {
             VStack(alignment: .leading, spacing: GgotgalpiTheme.Spacing.compact) {
                 HStack(alignment: .firstTextBaseline) {
                     Text(book.title)
-                        .font(.subheadline.weight(.semibold))
+                        .font(.doveMayo(.subheadline, bold: true))
                         .foregroundStyle(GgotgalpiTheme.ink)
 
                     Spacer(minLength: 8)
 
                     Text(entry.date.shortKoreanDate)
-                        .font(.caption2)
+                        .font(.doveMayo(.caption2))
                         .foregroundStyle(GgotgalpiTheme.secondaryInk)
                 }
 
                 Text("“\(entry.favoriteSentence)”")
-                    .font(.subheadline)
+                    .font(.doveMayo(size: 16, bold: true))
                     .foregroundStyle(GgotgalpiTheme.ink)
                     .italic()
                     .lineSpacing(3)

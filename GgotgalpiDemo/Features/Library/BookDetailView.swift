@@ -32,14 +32,14 @@ struct BookDetailView: View {
                         VStack(alignment: .leading, spacing: 9) {
                             HStack(spacing: 6) {
                                 Text(currentBook.title)
-                                    .font(.title2.weight(.semibold))
+                                    .font(.doveMayo(.title2, bold: true))
                                     .foregroundStyle(GgotgalpiTheme.ink)
 
                                 Button {
                                     showingEditBook = true
                                 } label: {
                                     Image(systemName: "pencil")
-                                        .font(.caption.weight(.semibold))
+                                        .font(.doveMayo(.caption, bold: true))
                                         .foregroundStyle(GgotgalpiTheme.secondaryInk)
                                         .frame(width: 24, height: 24)
                                 }
@@ -47,15 +47,15 @@ struct BookDetailView: View {
                                 .accessibilityLabel("책 정보 수정")
                             }
                             Text(currentBook.author)
-                                .font(.subheadline)
+                                .font(.doveMayo(.subheadline))
                                 .foregroundStyle(GgotgalpiTheme.secondaryInk)
                             if showsPublisher && !currentBook.publisher.isEmpty {
                                 Text(currentBook.publisher)
-                                    .font(.caption)
+                                    .font(.doveMayo(.caption))
                                     .foregroundStyle(GgotgalpiTheme.secondaryInk)
                             }
                             Text(currentBook.category.rawValue)
-                                .font(.caption)
+                                .font(.doveMayo(.caption))
                                 .foregroundStyle(GgotgalpiTheme.secondaryInk)
                                 .padding(.horizontal, 9)
                                 .padding(.vertical, 5)
@@ -79,7 +79,7 @@ struct BookDetailView: View {
                         showingAddEntry = true
                     } label: {
                         Label("감상 기록 남기기", systemImage: "pencil.line")
-                            .font(.headline)
+                            .font(.doveMayo(.headline, bold: true))
                             .foregroundStyle(GgotgalpiTheme.paper)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 14)
@@ -91,7 +91,7 @@ struct BookDetailView: View {
 
                     if bookEntries.isEmpty {
                         Text("아직 남긴 기록이 없어요.")
-                            .font(.subheadline)
+                            .font(.doveMayo(.subheadline))
                             .foregroundStyle(GgotgalpiTheme.secondaryInk)
                     } else {
                         ForEach(bookEntries) { entry in
@@ -108,7 +108,7 @@ struct BookDetailView: View {
                                     store.toggleFavoriteReview(id: entry.id)
                                 } label: {
                                     Image(systemName: entry.isFavoriteReview ? "heart.fill" : "heart")
-                                        .font(.body)
+                                        .font(.doveMayo(.body))
                                         .foregroundStyle(entry.isFavoriteReview ? GgotgalpiTheme.accent : GgotgalpiTheme.secondaryInk)
                                         .frame(width: 36, height: 36)
                                         .contentShape(Circle())
@@ -174,14 +174,14 @@ struct BookAverageRating: View {
             HStack(spacing: 1) {
                 ForEach(1...5, id: \.self) { value in
                     Image(systemName: ReadingRating.symbol(for: starRating, at: value))
-                        .font(.caption2)
+                        .font(.doveMayo(.caption2))
                         .foregroundStyle(starRating > Double(value - 1) ? GgotgalpiTheme.accent : GgotgalpiTheme.line)
                 }
             }
             .environment(\.layoutDirection, .leftToRight)
 
             Text("평균 \(ReadingRating.label(for: rating))")
-                .font(.caption.weight(.medium))
+                .font(.doveMayo(.caption, bold: true))
                 .foregroundStyle(GgotgalpiTheme.secondaryInk)
         }
         .accessibilityElement(children: .ignore)
@@ -196,10 +196,10 @@ struct DetailStat: View {
     var body: some View {
         VStack(spacing: 5) {
             Text(value)
-                .font(.title2.weight(.semibold))
+                .font(.doveMayo(.title2, bold: true))
                 .foregroundStyle(GgotgalpiTheme.ink)
             Text(title)
-                .font(.caption2)
+                .font(.doveMayo(.caption2))
                 .foregroundStyle(GgotgalpiTheme.secondaryInk)
         }
         .frame(maxWidth: .infinity)
@@ -215,22 +215,22 @@ struct ReadingEntryRow: View {
             HStack {
                 VStack(alignment: .leading, spacing: 3) {
                     Text(entry.date.shortKoreanDate)
-                        .font(.subheadline.weight(.medium))
+                        .font(.doveMayo(.subheadline, bold: true))
                         .foregroundStyle(GgotgalpiTheme.ink)
 
                     if entry.isFavoriteReview {
                         Label("가장 마음에 드는 감상문", systemImage: "heart.fill")
-                            .font(.caption2.weight(.semibold))
+                            .font(.doveMayo(.caption2, bold: true))
                             .foregroundStyle(GgotgalpiTheme.accent)
                     }
                 }
                 Spacer()
                 Text("\(entry.readingRound)회독 · p.\(entry.pageFrom)-p.\(entry.pageTo)")
-                    .font(.caption)
+                    .font(.doveMayo(.caption))
                     .foregroundStyle(GgotgalpiTheme.secondaryInk)
             }
             Text(entry.note)
-                .font(.subheadline)
+                .font(.doveMayo(size: 16))
                 .foregroundStyle(GgotgalpiTheme.secondaryInk)
                 .lineSpacing(3)
 
@@ -238,7 +238,7 @@ struct ReadingEntryRow: View {
                 HStack(spacing: 2) {
                     ForEach(1...5, id: \.self) { value in
                         Image(systemName: ReadingRating.symbol(for: entry.ratingValue, at: value))
-                            .font(.caption)
+                            .font(.doveMayo(.caption))
                             .foregroundStyle(entry.ratingValue > Double(value - 1) ? GgotgalpiTheme.accent : GgotgalpiTheme.line)
                     }
                 }
@@ -250,11 +250,11 @@ struct ReadingEntryRow: View {
             if showsFavoriteSentences && !entry.favoriteSentence.isEmpty {
                 HStack(alignment: .top, spacing: 6) {
                     Image(systemName: "quote.opening")
-                        .font(.caption.weight(.semibold))
+                        .font(.doveMayo(.caption, bold: true))
                         .foregroundStyle(GgotgalpiTheme.accent)
 
                     Text(entry.favoriteSentence)
-                        .font(.subheadline)
+                        .font(.doveMayo(size: 16, bold: true))
                         .foregroundStyle(GgotgalpiTheme.ink)
                         .italic()
                         .lineSpacing(3)

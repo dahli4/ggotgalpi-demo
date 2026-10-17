@@ -145,7 +145,7 @@ struct BookshelfView: View {
                         showingAddBook = true
                     } label: {
                         Image(systemName: "plus")
-                            .font(.title3.weight(.semibold))
+                            .font(.doveMayo(.title3, bold: true))
                             .foregroundStyle(GgotgalpiTheme.paper)
                             .frame(width: 52, height: 52)
                             .background(GgotgalpiTheme.accent)
@@ -183,7 +183,7 @@ struct BookshelfView: View {
                             isShowingFilters = true
                         } label: {
                             Text(filterSummary)
-                                .font(.caption.weight(.medium))
+                                .font(.doveMayo(.caption, bold: true))
                                 .lineLimit(1)
                                 .padding(.leading, GgotgalpiTheme.Spacing.control)
                         }
@@ -216,7 +216,7 @@ struct BookshelfView: View {
             TrashView()
         } label: {
             Image(systemName: "trash")
-                .font(.body)
+                .font(.doveMayo(.body))
                 .foregroundStyle(GgotgalpiTheme.ink)
                 .frame(width: 40, height: 40)
         }
@@ -230,7 +230,7 @@ struct BookshelfView: View {
             isShowingFilters = true
         } label: {
             Image(systemName: "line.3.horizontal.decrease.circle")
-                .font(.body)
+                .font(.doveMayo(.body))
                 .frame(width: 40, height: 40)
         }
         .buttonStyle(.plain)
@@ -259,7 +259,7 @@ struct BookshelfView: View {
                     searchQuery = ""
                 } label: {
                     Image(systemName: "xmark.circle.fill")
-                        .font(.caption)
+                        .font(.doveMayo(.caption))
                         .foregroundStyle(GgotgalpiTheme.secondaryInk)
                 }
                 .buttonStyle(.plain)
@@ -268,7 +268,7 @@ struct BookshelfView: View {
 
             TextField("책, 감상문, 연도 또는 월", text: $searchQuery)
                 .textFieldStyle(.plain)
-                .font(.subheadline)
+                .font(.doveMayo(.subheadline))
                 .focused($isSearchFieldFocused)
                 .submitLabel(.search)
                 .frame(maxWidth: .infinity)
@@ -305,12 +305,12 @@ private struct BookshelfFilterSheet: View {
         NavigationStack {
             VStack(alignment: .leading, spacing: GgotgalpiTheme.Spacing.section) {
                 Text("책장에 표시할 책을 골라 보세요.")
-                    .font(.subheadline)
+                    .font(.doveMayo(.subheadline))
                     .foregroundStyle(GgotgalpiTheme.secondaryInk)
 
                 VStack(alignment: .leading, spacing: GgotgalpiTheme.Spacing.compact) {
                     Text("읽은 상태")
-                        .font(.caption.weight(.semibold))
+                        .font(.doveMayo(.caption, bold: true))
                         .foregroundStyle(GgotgalpiTheme.secondaryInk)
 
                     ReadingStatusUnderlineTabs(selection: $selectedReadingStatus)
@@ -318,7 +318,7 @@ private struct BookshelfFilterSheet: View {
 
                 VStack(alignment: .leading, spacing: GgotgalpiTheme.Spacing.compact) {
                     Text("장르")
-                        .font(.caption.weight(.semibold))
+                        .font(.doveMayo(.caption, bold: true))
                         .foregroundStyle(GgotgalpiTheme.secondaryInk)
 
                     CalendarCategoryTabs(selection: $selectedCategory)
@@ -358,7 +358,7 @@ struct ReadingStatusUnderlineTabs: View {
                     selection = status
                 } label: {
                     Text(status.rawValue)
-                        .font(.subheadline.weight(selection == status ? .semibold : .regular))
+                        .font(.doveMayo(.subheadline, bold: selection == status))
                         .foregroundStyle(selection == status ? GgotgalpiTheme.ink : GgotgalpiTheme.secondaryInk)
                         .padding(.vertical, 7)
                     .frame(maxWidth: .infinity)
@@ -388,7 +388,7 @@ struct CalendarCategoryTabs: View {
                     selection = category
                 } label: {
                     Text(category.rawValue)
-                        .font(.subheadline.weight(selection == category ? .semibold : .regular))
+                        .font(.doveMayo(.subheadline, bold: selection == category))
                         .foregroundStyle(selection == category ? GgotgalpiTheme.ink : GgotgalpiTheme.secondaryInk)
                         .padding(.vertical, 7)
                         .frame(maxWidth: .infinity)
@@ -442,11 +442,11 @@ struct BookCard: View {
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(book.title)
-                    .font(.headline)
+                    .font(.doveMayo(.headline, bold: true))
                     .foregroundStyle(GgotgalpiTheme.ink)
 
                 Text(book.author)
-                    .font(.subheadline)
+                    .font(.doveMayo(.subheadline))
                     .foregroundStyle(GgotgalpiTheme.secondaryInk)
 
                 HStack(spacing: 6) {
@@ -456,7 +456,7 @@ struct BookCard: View {
                         Label("평균 \(ReadingRating.label(for: averageRating))", systemImage: "star.fill")
                     }
                 }
-                .font(.caption)
+                .font(.doveMayo(.caption))
                 .foregroundStyle(GgotgalpiTheme.secondaryInk)
             }
             .fixedSize(horizontal: false, vertical: true)
@@ -464,7 +464,7 @@ struct BookCard: View {
             Spacer(minLength: 8)
 
             Image(systemName: "chevron.right")
-                .font(.caption.weight(.semibold))
+                .font(.doveMayo(.caption, bold: true))
                 .foregroundStyle(GgotgalpiTheme.secondaryInk)
         }
         .frame(maxWidth: .infinity, minHeight: 72, alignment: .leading)

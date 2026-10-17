@@ -18,6 +18,8 @@
 		A10000010000000000000009 /* MyRecordView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000010 /* MyRecordView.swift */; };
 		A10000010000000000000010 /* CalendarBookCoverStack.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000011 /* CalendarBookCoverStack.swift */; };
 		A10000010000000000000011 /* UnifiedSearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000012 /* UnifiedSearchView.swift */; };
+		A10000010000000000000012 /* dovemayo.otf in Resources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000013 /* dovemayo.otf */; };
+		A10000010000000000000013 /* dovemayo_bold.otf in Resources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000014 /* dovemayo_bold.otf */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -33,6 +35,9 @@
 		A20000010000000000000010 /* MyRecordView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyRecordView.swift; sourceTree = "<group>"; };
 		A20000010000000000000011 /* CalendarBookCoverStack.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarBookCoverStack.swift; sourceTree = "<group>"; };
 		A20000010000000000000012 /* UnifiedSearchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnifiedSearchView.swift; sourceTree = "<group>"; };
+		A20000010000000000000013 /* dovemayo.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = dovemayo.otf; sourceTree = "<group>"; };
+		A20000010000000000000014 /* dovemayo_bold.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = dovemayo_bold.otf; sourceTree = "<group>"; };
+		A20000010000000000000015 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -60,6 +65,7 @@
 				A40000010000000000000004 /* App */,
 				A40000010000000000000005 /* Core */,
 				A40000010000000000000006 /* Features */,
+				A40000010000000000000010 /* Resources */,
 			);
 			path = GgotgalpiDemo;
 			sourceTree = "<group>";
@@ -77,6 +83,7 @@
 			children = (
 				A20000010000000000000001 /* GgotgalpiDemoApp.swift */,
 				A20000010000000000000002 /* ContentView.swift */,
+				A20000010000000000000015 /* Info.plist */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -126,6 +133,23 @@
 				A20000010000000000000010 /* MyRecordView.swift */,
 			);
 			path = Journal;
+			sourceTree = "<group>";
+		};
+		A40000010000000000000010 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				A40000010000000000000011 /* Fonts */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		A40000010000000000000011 /* Fonts */ = {
+			isa = PBXGroup;
+			children = (
+				A20000010000000000000013 /* dovemayo.otf */,
+				A20000010000000000000014 /* dovemayo_bold.otf */,
+			);
+			path = Fonts;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -181,6 +205,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A10000010000000000000012 /* dovemayo.otf in Resources */,
+				A10000010000000000000013 /* dovemayo_bold.otf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -220,7 +246,8 @@
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = GgotgalpiDemo/App/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "꽃갈피";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.books";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -253,7 +280,8 @@
 				DEVELOPMENT_TEAM = "";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = GgotgalpiDemo/App/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "꽃갈피";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.books";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;

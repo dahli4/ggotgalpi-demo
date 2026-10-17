@@ -186,6 +186,7 @@ struct AddReadingEntryView: View {
 
                     Section("감상") {
                         TextEditor(text: $note)
+                            .font(.doveMayo(size: 17))
                             .focused($focusedWritingField, equals: .note)
                             .frame(minHeight: 130)
                             .id(WritingField.note)
@@ -193,6 +194,7 @@ struct AddReadingEntryView: View {
 
                     Section {
                         TextEditor(text: $favoriteSentence)
+                            .font(.doveMayo(size: 17, bold: true))
                             .focused($focusedWritingField, equals: .favoriteSentence)
                             .frame(minHeight: 100)
                             .id(WritingField.favoriteSentence)
@@ -208,7 +210,7 @@ struct AddReadingEntryView: View {
                         } label: {
                             HStack(spacing: GgotgalpiTheme.Spacing.control) {
                                 Image(systemName: hasFinishedReadingRound ? "checkmark.square.fill" : "square")
-                                    .font(.title3)
+                                    .font(.doveMayo(.title3))
                                 Text("이번 회독을 마치셨나요?")
                                 Spacer()
                             }
@@ -348,7 +350,7 @@ private struct StarRatingPicker: View {
             HStack(spacing: 4) {
                 ForEach(1...5, id: \.self) { value in
                     Image(systemName: ReadingRating.symbol(for: rating, at: value))
-                        .font(.title3)
+                        .font(.doveMayo(.title3))
                         .foregroundStyle(rating > Double(value - 1) ? GgotgalpiTheme.accent : GgotgalpiTheme.line)
                         .frame(width: 36, height: 44)
                         .contentShape(Rectangle())
@@ -373,7 +375,7 @@ private struct StarRatingPicker: View {
             Spacer(minLength: 0)
 
             Text(ReadingRating.label(for: rating))
-                .font(.subheadline)
+                .font(.doveMayo(.subheadline))
                 .foregroundStyle(GgotgalpiTheme.secondaryInk)
                 .accessibilityHidden(true)
         }

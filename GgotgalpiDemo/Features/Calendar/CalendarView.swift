@@ -163,7 +163,7 @@ struct CalendarView: View {
                         selectedDate = today
                         displayedMonth = Calendar.current.startOfMonth(for: today)
                     }
-                    .font(.subheadline.weight(.medium))
+                    .font(.doveMayo(.subheadline, bold: true))
                     .foregroundStyle(GgotgalpiTheme.ink)
                     .frame(height: 40)
                     .padding(.horizontal, GgotgalpiTheme.Spacing.control)
@@ -219,7 +219,7 @@ struct CalendarView: View {
                             isShowingFilters = true
                         } label: {
                             Text(filterSummary)
-                                .font(.caption.weight(.medium))
+                                .font(.doveMayo(.caption, bold: true))
                                 .lineLimit(1)
                                 // 아이콘 버튼의 내부 여백과 맞춰, 선택된 필터도 캡슐 안에서 균형 있게 보이게 합니다.
                                 .padding(.leading, GgotgalpiTheme.Spacing.control)
@@ -250,7 +250,7 @@ struct CalendarView: View {
             isShowingFilters = true
         } label: {
             Image(systemName: "line.3.horizontal.decrease.circle")
-                .font(.body)
+                .font(.doveMayo(.body))
                 .frame(width: 40, height: 40)
         }
         .buttonStyle(.plain)
@@ -266,7 +266,7 @@ struct CalendarView: View {
             }
         } label: {
             Image(systemName: "magnifyingglass")
-                .font(.body)
+                .font(.doveMayo(.body))
                 .frame(width: 40, height: 40)
         }
         .buttonStyle(.plain)
@@ -280,7 +280,7 @@ struct CalendarView: View {
                     searchQuery = ""
                 } label: {
                     Image(systemName: "xmark.circle.fill")
-                        .font(.caption)
+                        .font(.doveMayo(.caption))
                         .foregroundStyle(GgotgalpiTheme.secondaryInk)
                 }
                 .buttonStyle(.plain)
@@ -289,7 +289,7 @@ struct CalendarView: View {
 
             TextField("책, 감상문, 연도 또는 월", text: $searchQuery)
                 .textFieldStyle(.plain)
-                .font(.subheadline)
+                .font(.doveMayo(.subheadline))
                 .focused($isSearchFieldFocused)
                 .submitLabel(.search)
                 .frame(maxWidth: .infinity)
@@ -354,7 +354,7 @@ private struct CalendarMonthlySummary: View {
     var body: some View {
         VStack(alignment: .leading, spacing: GgotgalpiTheme.Spacing.control) {
             Text("이번 달 요약")
-                .font(.system(.headline, design: .serif))
+                .font(.doveMayo(.headline, bold: true))
                 .foregroundStyle(GgotgalpiTheme.ink)
 
             HStack(spacing: 0) {
@@ -368,28 +368,28 @@ private struct CalendarMonthlySummary: View {
 
                 VStack(alignment: .leading, spacing: 5) {
                     Text("최근 감상 · \(latestEntry.date.shortKoreanDate)")
-                        .font(.caption.weight(.medium))
+                        .font(.doveMayo(.caption, bold: true))
                         .foregroundStyle(GgotgalpiTheme.secondaryInk)
 
                     Text(latestBook.title)
-                        .font(.subheadline.weight(.semibold))
+                        .font(.doveMayo(.subheadline, bold: true))
                         .foregroundStyle(GgotgalpiTheme.ink)
 
                     Text(latestEntry.note)
-                        .font(.caption)
+                        .font(.doveMayo(.caption))
                         .foregroundStyle(GgotgalpiTheme.secondaryInk)
                         .lineLimit(1)
                         .truncationMode(.tail)
                 }
             } else {
                 Text("이번 달에 남긴 감상이 아직 없어요.")
-                    .font(.subheadline)
+                    .font(.doveMayo(.subheadline))
                     .foregroundStyle(GgotgalpiTheme.secondaryInk)
             }
 
             VStack(alignment: .leading, spacing: 7) {
                 Text("지난 이맘때")
-                    .font(.system(.headline, design: .serif))
+                    .font(.doveMayo(.headline, bold: true))
                     .foregroundStyle(GgotgalpiTheme.ink)
 
                 if let featuredLastYearBook {
@@ -405,23 +405,23 @@ private struct CalendarMonthlySummary: View {
 
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(featuredLastYearBook.title)
-                                    .font(.subheadline.weight(.semibold))
+                                    .font(.doveMayo(.subheadline, bold: true))
                                     .foregroundStyle(GgotgalpiTheme.ink)
 
                                 if featuredLastYearFavoriteReview == nil {
                                     Text(featuredLastYearBook.author)
-                                        .font(.caption)
+                                        .font(.doveMayo(.caption))
                                         .foregroundStyle(GgotgalpiTheme.secondaryInk)
                                 }
 
                                 if let favoriteReview = featuredLastYearFavoriteReview {
                                     Label("가장 마음에 드는 감상문", systemImage: "heart.fill")
-                                        .font(.caption2.weight(.semibold))
+                                        .font(.doveMayo(.caption2, bold: true))
                                         .foregroundStyle(GgotgalpiTheme.accent)
                                         .padding(.top, 4)
 
                                     Text(favoriteReview.note)
-                                        .font(.caption)
+                                        .font(.doveMayo(size: 13))
                                         .foregroundStyle(GgotgalpiTheme.secondaryInk)
                                         .lineLimit(2)
                                         .multilineTextAlignment(.leading)
@@ -432,7 +432,7 @@ private struct CalendarMonthlySummary: View {
                     .buttonStyle(.plain)
                 } else {
                     Text("이 달에 읽은 책이 없어요.")
-                        .font(.subheadline)
+                        .font(.doveMayo(.subheadline))
                         .foregroundStyle(GgotgalpiTheme.secondaryInk)
                 }
             }
@@ -484,30 +484,30 @@ private struct CalendarPastReadingEntriesSheet: View {
 
                         VStack(alignment: .leading, spacing: 3) {
                             Text(book.title)
-                                .font(.headline)
+                                .font(.doveMayo(.headline, bold: true))
                                 .foregroundStyle(GgotgalpiTheme.ink)
                             Text(book.author)
-                                .font(.subheadline)
+                                .font(.doveMayo(.subheadline))
                                 .foregroundStyle(GgotgalpiTheme.secondaryInk)
                         }
                     }
 
                     Text("\(month.formatted(.dateTime.year().month().locale(Locale(identifier: "ko_KR"))))에 남긴 감상")
-                        .font(.subheadline.weight(.medium))
+                        .font(.doveMayo(.subheadline, bold: true))
                         .foregroundStyle(GgotgalpiTheme.secondaryInk)
 
                     ForEach(sortedEntries) { entry in
                         VStack(alignment: .leading, spacing: 7) {
                             Text(entry.date.formatted(.dateTime.month().day().weekday(.short).locale(Locale(identifier: "ko_KR"))))
-                                .font(.caption.weight(.semibold))
+                                .font(.doveMayo(.caption, bold: true))
                                 .foregroundStyle(GgotgalpiTheme.secondaryInk)
 
                             Text(entry.note)
-                                .font(.body)
+                                .font(.doveMayo(size: 17))
                                 .foregroundStyle(GgotgalpiTheme.ink)
 
                             Text("p. \(entry.pageFrom)–\(entry.pageTo) · \(entry.readingRound)회독")
-                                .font(.caption)
+                                .font(.doveMayo(.caption))
                                 .foregroundStyle(GgotgalpiTheme.secondaryInk)
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -538,10 +538,10 @@ private struct CalendarSummaryMetric: View {
     var body: some View {
         VStack(spacing: 3) {
             Text(value)
-                .font(.system(.title3, design: .serif).weight(.semibold))
+                .font(.doveMayo(.title3, bold: true))
                 .foregroundStyle(GgotgalpiTheme.ink)
             Text(title)
-                .font(.caption2)
+                .font(.doveMayo(.caption2))
                 .foregroundStyle(GgotgalpiTheme.secondaryInk)
         }
         .frame(maxWidth: .infinity)
@@ -557,12 +557,12 @@ private struct CalendarFilterSheet: View {
         NavigationStack {
             VStack(alignment: .leading, spacing: GgotgalpiTheme.Spacing.section) {
                 Text("달력에 표시할 감상을 골라 보세요.")
-                    .font(.subheadline)
+                    .font(.doveMayo(.subheadline))
                     .foregroundStyle(GgotgalpiTheme.secondaryInk)
 
                 VStack(alignment: .leading, spacing: GgotgalpiTheme.Spacing.compact) {
                     Text("읽은 상태")
-                        .font(.caption.weight(.semibold))
+                        .font(.doveMayo(.caption, bold: true))
                         .foregroundStyle(GgotgalpiTheme.secondaryInk)
 
                     ReadingStatusUnderlineTabs(selection: $selectedReadingStatus)
@@ -570,7 +570,7 @@ private struct CalendarFilterSheet: View {
 
                 VStack(alignment: .leading, spacing: GgotgalpiTheme.Spacing.compact) {
                     Text("장르")
-                        .font(.caption.weight(.semibold))
+                        .font(.doveMayo(.caption, bold: true))
                         .foregroundStyle(GgotgalpiTheme.secondaryInk)
 
                     CalendarCategoryTabs(selection: $selectedCategory)
@@ -662,7 +662,7 @@ private struct CalendarDayEntriesSheet: View {
                             Text(editMode == .active
                                  ? "오른쪽 손잡이를 드래그해 순서를 정하세요. 맨 위 작품이 달력의 최전면 표지가 됩니다."
                                  : "감상문을 길게 눌러 작품 순서를 바꿀 수 있어요.")
-                                .font(.caption)
+                                .font(.doveMayo(.caption))
                                 .foregroundStyle(GgotgalpiTheme.secondaryInk)
                                 .listRowBackground(GgotgalpiTheme.paperDeep.opacity(0.58))
                         }
@@ -726,7 +726,7 @@ private struct CalendarDayEntriesSheet: View {
                         showingAddBook = true
                     } label: {
                         Image(systemName: "plus")
-                            .font(.title3.weight(.semibold))
+                            .font(.doveMayo(.title3, bold: true))
                             .foregroundStyle(GgotgalpiTheme.paper)
                             .frame(width: 52, height: 52)
                             .background(GgotgalpiTheme.accent)
@@ -778,7 +778,7 @@ private struct CalendarDayBookEntryRow: View {
                     }
                 } label: {
                     Text(currentBook.title)
-                        .font(.headline)
+                        .font(.doveMayo(.headline, bold: true))
                         .foregroundStyle(GgotgalpiTheme.ink)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
@@ -793,16 +793,16 @@ private struct CalendarDayBookEntryRow: View {
                             VStack(alignment: .leading, spacing: 4) {
                                 HStack(alignment: .firstTextBaseline) {
                                     Text("p.\(entry.pageFrom)-\(entry.pageTo)")
-                                        .font(.caption)
+                                        .font(.doveMayo(.caption))
                                         .foregroundStyle(GgotgalpiTheme.secondaryInk)
                                     Spacer()
                                     Text("\(entry.readingRound)회독")
-                                        .font(.caption)
+                                        .font(.doveMayo(.caption))
                                         .foregroundStyle(GgotgalpiTheme.secondaryInk)
                                 }
 
                                 Text(entry.note)
-                                    .font(.body)
+                                    .font(.doveMayo(size: 17))
                                     .foregroundStyle(GgotgalpiTheme.ink)
                                     .lineSpacing(4)
                                     .fixedSize(horizontal: false, vertical: true)
@@ -816,7 +816,7 @@ private struct CalendarDayBookEntryRow: View {
                             store.toggleFavoriteReview(id: entry.id)
                         } label: {
                             Image(systemName: entry.isFavoriteReview ? "heart.fill" : "heart")
-                                .font(.body)
+                                .font(.doveMayo(.body))
                                 .foregroundStyle(entry.isFavoriteReview ? GgotgalpiTheme.accent : GgotgalpiTheme.secondaryInk)
                                 .frame(width: 36, height: 36)
                                 .contentShape(Circle())
@@ -893,7 +893,7 @@ private struct MonthlyCalendarGrid: View {
                         isShowingMonthPicker = true
                     } label: {
                         Text(monthTitle)
-                            .font(.headline)
+                            .font(.doveMayo(.headline, bold: true))
                             .foregroundStyle(GgotgalpiTheme.ink)
                     }
                     .buttonStyle(.plain)
@@ -914,7 +914,7 @@ private struct MonthlyCalendarGrid: View {
                 LazyVGrid(columns: columns, spacing: 0) {
                     ForEach(weekdaySymbols.indices, id: \.self) { index in
                         Text(weekdaySymbols[index])
-                            .font(.caption.weight(.medium))
+                            .font(.doveMayo(.caption, bold: true))
                             .foregroundStyle(GgotgalpiTheme.secondaryInk)
                             .frame(maxWidth: .infinity, minHeight: weekdayHeight)
                     }
@@ -1045,7 +1045,7 @@ private struct CalendarMonthPicker: View {
 
                         Text("월")
                     }
-                    .font(.headline)
+                    .font(.doveMayo(.headline, bold: true))
                     .foregroundStyle(GgotgalpiTheme.ink)
                 }
 
@@ -1131,7 +1131,7 @@ private struct CalendarDayCell: View {
                         .accessibilityLabel(date.shortKoreanDate)
 
                         Text(date.formatted(.dateTime.day()))
-                            .font(.subheadline.weight(isSelected ? .bold : .regular))
+                            .font(.doveMayo(.subheadline, bold: isSelected))
                             .foregroundStyle(GgotgalpiTheme.ink)
                             .padding(8)
                             .allowsHitTesting(false)

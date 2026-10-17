@@ -110,6 +110,7 @@ struct ContentView: View {
         }
         // 화면 배경은 기기 가장자리까지 확장하되, 키보드가 나타날 때는 안전 영역을 존중합니다.
         .ignoresSafeArea(.container)
+        .font(.doveMayo(.body))
         .overlay(alignment: .bottom) {
             if !isShowingSettingsDetail {
                 tabDock
@@ -317,9 +318,9 @@ struct ContentView: View {
     private func tabPickerLabel(title: String, symbol: String, isSelected: Bool) -> some View {
         VStack(spacing: 2) {
             Image(systemName: symbol)
-                .font(.body.weight(.semibold))
+                .font(.doveMayo(.body, bold: true))
             Text(title)
-                .font(.caption2.weight(.medium))
+                .font(.doveMayo(.caption2, bold: true))
         }
         .foregroundStyle(isSelected ? GgotgalpiTheme.ink : GgotgalpiTheme.secondaryInk)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -420,7 +421,7 @@ struct SettingsView: View {
                             Label("휴지통", systemImage: "trash")
                             Spacer()
                             Image(systemName: "chevron.right")
-                                .font(.caption.weight(.semibold))
+                                .font(.doveMayo(.caption, bold: true))
                                 .foregroundStyle(.gray)
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)

@@ -1,5 +1,32 @@
 import SwiftUI
 
+extension Font {
+    /// 감상 기록과 인용문에만 사용하는 둘기마요 글꼴입니다.
+    static func doveMayo(size: CGFloat, bold: Bool = false) -> Font {
+        .custom(bold ? "Dovemayo-Bold" : "Dovemayo-Medium", size: size)
+    }
+
+    /// 기존 SwiftUI 글자 크기 체계를 유지하면서 둘기마요 굵기를 적용합니다.
+    static func doveMayo(_ style: TextStyle, bold: Bool = false) -> Font {
+        let size: CGFloat
+        switch style {
+        case .largeTitle: size = 34
+        case .title: size = 28
+        case .title2: size = 22
+        case .title3: size = 20
+        case .headline, .body: size = 17
+        case .callout: size = 16
+        case .subheadline: size = 15
+        case .footnote: size = 13
+        case .caption: size = 12
+        case .caption2: size = 11
+        @unknown default: size = 17
+        }
+
+        return .custom(bold ? "Dovemayo-Bold" : "Dovemayo-Medium", size: size, relativeTo: style)
+    }
+}
+
 enum GgotgalpiTheme {
     // #F8F2E8에 가까운 따뜻한 화이트: 흰색의 인상을 지키되 베이지 기운을 분명히 남깁니다.
     static let paper = Color(red: 0.973, green: 0.949, blue: 0.910)
@@ -61,14 +88,14 @@ struct SectionLabel: View {
     var body: some View {
         HStack(alignment: .firstTextBaseline) {
             Text(title)
-                .font(.headline)
+                .font(.doveMayo(.headline, bold: true))
                 .foregroundStyle(GgotgalpiTheme.ink)
 
             Spacer()
 
             if let actionTitle, let action {
                 Button(actionTitle, action: action)
-                    .font(.caption)
+                    .font(.doveMayo(.caption))
                     .foregroundStyle(GgotgalpiTheme.secondaryInk)
             }
         }
@@ -86,7 +113,7 @@ struct BookColorMark: View {
             .frame(width: size, height: size)
             .overlay {
                 Text(String(title.prefix(1)))
-                    .font(.headline)
+                    .font(.doveMayo(.headline, bold: true))
                     .foregroundStyle(.white.opacity(0.92))
             }
             .accessibilityHidden(true)
@@ -108,15 +135,15 @@ struct ReadingEmptyState: View {
     var body: some View {
         VStack(spacing: GgotgalpiTheme.Spacing.compact) {
             Image(systemName: "text.book.closed")
-                .font(.title2)
+                .font(.doveMayo(.title2))
                 .foregroundStyle(GgotgalpiTheme.accent)
 
             Text(title)
-                .font(.headline)
+                .font(.doveMayo(.headline, bold: true))
                 .foregroundStyle(GgotgalpiTheme.ink)
 
             Text(message)
-                .font(.subheadline)
+                .font(.doveMayo(.subheadline))
                 .foregroundStyle(GgotgalpiTheme.secondaryInk)
                 .multilineTextAlignment(.center)
         }

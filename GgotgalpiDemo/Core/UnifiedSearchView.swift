@@ -298,7 +298,7 @@ struct InlineUnifiedSearchView: View {
                 if !snapshot.matchingBooks.isEmpty {
                     VStack(alignment: .leading, spacing: GgotgalpiTheme.Spacing.control) {
                         Text(snapshot.dateFilter == nil ? "등록된 책" : "해당 기간에 읽은 책")
-                            .font(.headline)
+                            .font(.doveMayo(.headline, bold: true))
                             .foregroundStyle(GgotgalpiTheme.ink)
 
                         ForEach(snapshot.matchingBooks) { book in
@@ -317,7 +317,7 @@ struct InlineUnifiedSearchView: View {
                         ForEach(snapshot.entryMonthGroups) { group in
                             VStack(alignment: .leading, spacing: GgotgalpiTheme.Spacing.control) {
                                 Text(group.title)
-                                    .font(.headline)
+                                    .font(.doveMayo(.headline, bold: true))
                                     .foregroundStyle(GgotgalpiTheme.ink)
                                 searchEntryRows(group.entries)
                             }
@@ -325,7 +325,7 @@ struct InlineUnifiedSearchView: View {
                     } else {
                         VStack(alignment: .leading, spacing: GgotgalpiTheme.Spacing.control) {
                             Text("감상 기록")
-                                .font(.headline)
+                                .font(.doveMayo(.headline, bold: true))
                                 .foregroundStyle(GgotgalpiTheme.ink)
                             searchEntryRows(snapshot.matchingEntries)
                         }
@@ -432,10 +432,10 @@ private struct SearchGuideRow: View {
                 .frame(width: 22)
             VStack(alignment: .leading, spacing: 4) {
                 Text(title)
-                    .font(.subheadline.weight(.medium))
+                    .font(.doveMayo(.subheadline, bold: true))
                     .foregroundStyle(GgotgalpiTheme.ink)
                 Text(message)
-                    .font(.caption)
+                    .font(.doveMayo(.caption))
                     .foregroundStyle(GgotgalpiTheme.secondaryInk)
             }
         }
@@ -452,18 +452,18 @@ private struct SearchBookRow: View {
             BookColorMark(title: book.title, color: book.coverColor, size: 44)
             VStack(alignment: .leading, spacing: 3) {
                 Text(book.title)
-                    .font(.headline)
+                    .font(.doveMayo(.headline, bold: true))
                     .foregroundStyle(GgotgalpiTheme.ink)
                 Text(book.author)
-                    .font(.subheadline)
+                    .font(.doveMayo(.subheadline))
                     .foregroundStyle(GgotgalpiTheme.secondaryInk)
                 Text("감상 \(entryCount)개 · \(book.category.rawValue)")
-                    .font(.caption)
+                    .font(.doveMayo(.caption))
                     .foregroundStyle(GgotgalpiTheme.secondaryInk)
             }
             Spacer()
             Image(systemName: "chevron.right")
-                .font(.caption.weight(.semibold))
+                .font(.doveMayo(.caption, bold: true))
                 .foregroundStyle(GgotgalpiTheme.secondaryInk)
         }
         .contentShape(Rectangle())
@@ -481,24 +481,24 @@ private struct SearchEntryRow: View {
                 VStack(alignment: .leading, spacing: 4) {
                     HStack {
                         Text(book.title)
-                            .font(.subheadline.weight(.semibold))
+                            .font(.doveMayo(.subheadline, bold: true))
                             .foregroundStyle(GgotgalpiTheme.ink)
                         Spacer()
                         Text(entry.date.shortKoreanDate)
-                            .font(.caption)
+                            .font(.doveMayo(.caption))
                             .foregroundStyle(GgotgalpiTheme.secondaryInk)
                     }
                     Text("p.\(entry.pageFrom)-\(entry.pageTo) · \(entry.readingRound)회독")
-                        .font(.caption)
+                        .font(.doveMayo(.caption))
                         .foregroundStyle(GgotgalpiTheme.secondaryInk)
                     Text(entry.note)
-                        .font(.subheadline)
+                        .font(.doveMayo(size: 16))
                         .foregroundStyle(GgotgalpiTheme.secondaryInk)
                         .lineLimit(2)
 
                     if !entry.favoriteSentence.isEmpty {
                         Text("“\(entry.favoriteSentence)”")
-                            .font(.caption)
+                            .font(.doveMayo(size: 14, bold: true))
                             .foregroundStyle(GgotgalpiTheme.ink)
                             .italic()
                             .lineLimit(2)

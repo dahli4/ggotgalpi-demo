@@ -134,7 +134,7 @@ private struct CalendarDayNumberBadge: View {
                 .frame(width: 19, height: 19)
 
             Text(date.formatted(.dateTime.day()))
-                .font(.system(size: 8, weight: isSelected ? .bold : .medium))
+                .font(.doveMayo(size: 8, bold: isSelected))
                 .foregroundStyle(.black.opacity(0.82))
         }
         .frame(width: 19, height: 19)
@@ -180,7 +180,7 @@ struct CalendarBookCover: View {
             }
             .overlay(alignment: .bottomLeading) {
                 Text(book.title)
-                    .font(.system(size: 7, weight: .semibold))
+                    .font(.doveMayo(size: 7, bold: true))
                     .foregroundStyle(.white.opacity(0.96))
                     .lineLimit(2)
                     .minimumScaleFactor(0.7)
@@ -218,10 +218,10 @@ struct CalendarBookOrderEditor: View {
 
                             VStack(alignment: .leading, spacing: 3) {
                                 Text(book.title)
-                                    .font(.headline)
+                                    .font(.doveMayo(.headline, bold: true))
                                     .foregroundStyle(GgotgalpiTheme.ink)
                                 Text(book.author)
-                                    .font(.subheadline)
+                                    .font(.doveMayo(.subheadline))
                                     .foregroundStyle(GgotgalpiTheme.secondaryInk)
                             }
                         }
