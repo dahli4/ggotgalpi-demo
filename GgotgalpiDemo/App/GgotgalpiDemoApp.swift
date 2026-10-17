@@ -8,7 +8,12 @@ struct GgotgalpiDemoApp: App {
 
     init() {
         do {
-            let container = try ModelContainer(for: Book.self, ReadingEntry.self)
+            let schema = Schema([Book.self, ReadingEntry.self])
+            let configuration = ModelConfiguration(
+                schema: schema,
+                cloudKitDatabase: .private("iCloud.com.dahli4.ggotgalpi")
+            )
+            let container = try ModelContainer(for: schema, configurations: [configuration])
             modelContainer = container
             _store = StateObject(wrappedValue: DemoStore(modelContext: container.mainContext))
         } catch {

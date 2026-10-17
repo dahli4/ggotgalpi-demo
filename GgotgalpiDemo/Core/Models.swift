@@ -22,14 +22,16 @@ enum ReadingStatus: String, CaseIterable, Identifiable {
 
 @Model
 final class Book {
-    @Attribute(.unique) var id: UUID
-    var title: String
-    var author: String
-    var publisher: String
-    private var categoryRawValue: String
-    private var readingStatusRawValue: String
-    private var coverColorIndex: Int
-    var isHiddenFromCalendar: Bool
+    // CloudKit 동기화에서는 모든 저장 속성에 기본값이 필요하며 unique 제약을 지원하지 않습니다.
+    // UUID 자체는 그대로 유지해 기기 간 동일한 책과 감상 기록을 식별합니다.
+    var id: UUID = UUID()
+    var title: String = ""
+    var author: String = ""
+    var publisher: String = ""
+    private var categoryRawValue: String = BookCategory.literature.rawValue
+    private var readingStatusRawValue: String = ReadingStatus.wantToRead.rawValue
+    private var coverColorIndex: Int = 0
+    var isHiddenFromCalendar: Bool = false
     @Relationship(deleteRule: .cascade, inverse: \ReadingEntry.book) var entries: [ReadingEntry] = []
 
     var category: BookCategory {
@@ -75,16 +77,16 @@ final class Book {
 
 @Model
 final class ReadingEntry {
-    @Attribute(.unique) var id: UUID
-    var bookID: UUID
-    var date: Date
-    var createdAt: Date
-    var pageFrom: Int
-    var pageTo: Int
-    var note: String
-    var favoriteSentence: String
+    var id: UUID = UUID()
+    var bookID: UUID = UUID()
+    var date: Date = Date()
+    var createdAt: Date = Date()
+    var pageFrom: Int = 0
+    var pageTo: Int = 0
+    var note: String = ""
+    var favoriteSentence: String = ""
     var isFavoriteReview: Bool = false
-    var readingRound: Int
+    var readingRound: Int = 0
     // 기존 정수 별점 필드는 유지해 저장된 기록을 그대로 읽습니다.
     var rating: Int = 0
     var hasHalfStar: Bool = false
