@@ -119,6 +119,7 @@ struct ContentView: View {
         .tint(GgotgalpiTheme.accent)
         .onChange(of: scenePhase) { _, newPhase in
             guard newPhase == .active else { return }
+            store.refresh()
             store.purgeExpiredEntries()
         }
     }
@@ -394,12 +395,13 @@ enum BookshelfSortOption: String, CaseIterable, Identifiable {
 }
 
 struct SettingsView: View {
+    @EnvironmentObject private var store: DemoStore
     @Binding var isShowingDetail: Bool
     let panelWidth: CGFloat
     @AppStorage("ggotgalpi.settings.bookshelf-sort-order") private var bookshelfSortOrder = BookshelfSortOption.recentEntry.rawValue
     @AppStorage("ggotgalpi.settings.show-publisher") private var showsPublisher = true
     @AppStorage("ggotgalpi.settings.show-favorite-sentences") private var showsFavoriteSentences = true
-    @AppStorage(DemoStore.trashRetentionDaysKey) private var trashRetentionDays = DemoStore.defaultTrashRetentionDays
+    private var trashRetentionDays: Int { store.trashRetentionDays }
     @State private var isShowingTrash = false
     @State private var showingTrashRetentionOptions = false
 
@@ -471,7 +473,7 @@ struct SettingsView: View {
             .confirmationDialog("휴지통 보관 기간", isPresented: $showingTrashRetentionOptions, titleVisibility: .visible) {
                 ForEach([7, 14, 30], id: \.self) { days in
                     Button("\(days)일") {
-                        trashRetentionDays = days
+                        store.setTrashRetentionDays(days)
                     }
                 }
                 Button("취소", role: .destructive) {}

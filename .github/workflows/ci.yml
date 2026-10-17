@@ -33,3 +33,16 @@ jobs:
             -derivedDataPath .derivedData \
             CODE_SIGNING_ALLOWED=NO \
             build
+
+      - name: Test synced settings and model store
+        run: |
+          build_dir="$(mktemp -d)"
+          trap 'rm -rf "$build_dir"' EXIT
+          xcrun swiftc -swift-version 6 -warnings-as-errors -parse-as-library \
+            GgotgalpiDemo/Core/SyncedSettings.swift Tests/SyncedSettingsTests.swift \
+            -o "$build_dir/settings-tests"
+          "$build_dir/settings-tests"
+          xcrun swiftc -swift-version 5 -warnings-as-errors -parse-as-library \
+            GgotgalpiDemo/Core/SyncedSettings.swift GgotgalpiDemo/Core/Models.swift \
+            Tests/DemoStoreTests.swift -o "$build_dir/store-tests"
+          "$build_dir/store-tests"

@@ -20,6 +20,7 @@
 		A10000010000000000000011 /* UnifiedSearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000012 /* UnifiedSearchView.swift */; };
 		A10000010000000000000012 /* dovemayo.otf in Resources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000013 /* dovemayo.otf */; };
 		A10000010000000000000013 /* dovemayo_bold.otf in Resources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000014 /* dovemayo_bold.otf */; };
+		A10000010000000000000014 /* SyncedSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000016 /* SyncedSettings.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -38,6 +39,7 @@
 		A20000010000000000000013 /* dovemayo.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = dovemayo.otf; sourceTree = "<group>"; };
 		A20000010000000000000014 /* dovemayo_bold.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = dovemayo_bold.otf; sourceTree = "<group>"; };
 		A20000010000000000000015 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		A20000010000000000000016 /* SyncedSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncedSettings.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -92,6 +94,7 @@
 			isa = PBXGroup;
 			children = (
 				A20000010000000000000003 /* Models.swift */,
+				A20000010000000000000016 /* SyncedSettings.swift */,
 				A20000010000000000000004 /* Theme.swift */,
 				A20000010000000000000012 /* UnifiedSearchView.swift */,
 			);
@@ -220,6 +223,7 @@
 				A10000010000000000000001 /* GgotgalpiDemoApp.swift in Sources */,
 				A10000010000000000000002 /* ContentView.swift in Sources */,
 				A10000010000000000000003 /* Models.swift in Sources */,
+				A10000010000000000000014 /* SyncedSettings.swift in Sources */,
 				A10000010000000000000004 /* Theme.swift in Sources */,
 				A10000010000000000000005 /* BookDetailView.swift in Sources */,
 				A10000010000000000000006 /* AddBookView.swift in Sources */,

@@ -1,4 +1,6 @@
 import Foundation
+import Combine
+import CoreData
 import SwiftData
 import SwiftUI
 
@@ -156,34 +158,45 @@ enum ReadingRating {
 
 @MainActor
 final class DemoStore: ObservableObject {
-    static let trashRetentionDaysKey = "ggotgalpi.settings.trash-retention-days"
     static let defaultTrashRetentionDays = 30
-    private static let favoriteAuthorsKey = "ggotgalpi.favorite-authors.v1"
-
-    static var trashRetentionDays: Int {
-        let selectedDays = UserDefaults.standard.integer(forKey: trashRetentionDaysKey)
-        return [7, 14, 30].contains(selectedDays) ? selectedDays : defaultTrashRetentionDays
-    }
 
     @Published private(set) var books: [Book] = []
     @Published private(set) var entries: [ReadingEntry] = []
     @Published private(set) var trashedEntries: [ReadingEntry] = []
     @Published private(set) var favoriteAuthorKeys: Set<String> = []
+    @Published private(set) var trashRetentionDays = defaultTrashRetentionDays
     @Published private var calendarBookOrders: [String: [UUID]] = [:]
 
     private let modelContext: ModelContext
-    private let calendarBookOrdersKey = "ggotgalpi.calendar-book-orders.v1"
+    private let settings: SyncedSettings
+    private var remoteChanges: AnyCancellable?
 
-    init(modelContext: ModelContext) {
+    init(modelContext: ModelContext, settings: SyncedSettings? = nil) {
         self.modelContext = modelContext
-        favoriteAuthorKeys = Set(UserDefaults.standard.stringArray(forKey: Self.favoriteAuthorsKey) ?? [])
-        loadCalendarBookOrders()
+        self.settings = settings ?? SyncedSettings()
+        self.settings.onChange = { [weak self] in
+            self?.applySyncedSettings()
+        }
+        applySyncedSettings()
+        remoteChanges = NotificationCenter.default.publisher(for: .NSPersistentStoreRemoteChange)
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in self?.refresh() }
         refresh()
         purgeExpiredEntries()
 
         if books.isEmpty {
             seedSampleData()
         }
+    }
+
+    private func applySyncedSettings() {
+        favoriteAuthorKeys = Set(settings.favoriteAuthors)
+        calendarBookOrders = settings.calendarBookOrders
+        trashRetentionDays = settings.trashRetentionDays
+    }
+
+    func setTrashRetentionDays(_ days: Int) {
+        settings.setTrashRetentionDays(days)
     }
 
     func book(for id: UUID) -> Book? {
@@ -209,7 +222,7 @@ final class DemoStore: ObservableObject {
         } else {
             favoriteAuthorKeys.insert(key)
         }
-        UserDefaults.standard.set(Array(favoriteAuthorKeys), forKey: Self.favoriteAuthorsKey)
+        settings.setFavoriteAuthors(Array(favoriteAuthorKeys))
     }
 
     func hasSameAuthor(as book: Book, candidate: Book) -> Bool {
@@ -338,7 +351,7 @@ final class DemoStore: ObservableObject {
         let calendar = Calendar.current
         guard let expirationThreshold = calendar.date(
             byAdding: .day,
-            value: -Self.trashRetentionDays,
+            value: -trashRetentionDays,
             to: referenceDate
         ) else { return 0 }
 
@@ -364,7 +377,7 @@ final class DemoStore: ObservableObject {
         guard let deletedAt = entry.deletedAt else { return nil }
         return Calendar.current.date(
             byAdding: .day,
-            value: Self.trashRetentionDays,
+            value: trashRetentionDays,
             to: deletedAt
         )
     }
@@ -428,7 +441,7 @@ final class DemoStore: ObservableObject {
         saveCalendarBookOrders()
     }
 
-    private func refresh() {
+    func refresh() {
         do {
             books = try modelContext.fetch(FetchDescriptor<Book>())
             let allEntries = try modelContext.fetch(FetchDescriptor<ReadingEntry>())
@@ -504,15 +517,7 @@ final class DemoStore: ObservableObject {
 
     private func saveCalendarBookOrders() {
         guard let encoded = try? JSONEncoder().encode(calendarBookOrders) else { return }
-        UserDefaults.standard.set(encoded, forKey: calendarBookOrdersKey)
-    }
-
-    private func loadCalendarBookOrders() {
-        guard
-            let data = UserDefaults.standard.data(forKey: calendarBookOrdersKey),
-            let savedOrders = try? JSONDecoder().decode([String: [UUID]].self, from: data)
-        else { return }
-        calendarBookOrders = savedOrders
+        settings.setCalendarBookOrdersData(encoded)
     }
 
     private func calendarDateKey(for date: Date) -> String {

@@ -3,7 +3,7 @@ import SwiftUI
 struct MyRecordView: View {
     @EnvironmentObject private var store: DemoStore
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
-    @AppStorage(DemoStore.trashRetentionDaysKey) private var trashRetentionDays = DemoStore.defaultTrashRetentionDays
+    private var trashRetentionDays: Int { store.trashRetentionDays }
     @State private var entryPendingDeletionID: UUID?
     @State private var showingEntryDeletionConfirmation = false
 
@@ -132,7 +132,7 @@ struct MyRecordView: View {
 
 struct TrashView: View {
     @EnvironmentObject private var store: DemoStore
-    @AppStorage(DemoStore.trashRetentionDaysKey) private var trashRetentionDays = DemoStore.defaultTrashRetentionDays
+    private var trashRetentionDays: Int { store.trashRetentionDays }
     @State private var entryPendingPermanentDeletionID: UUID?
     @State private var showingPermanentDeletionConfirmation = false
 
