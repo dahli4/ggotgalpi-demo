@@ -25,6 +25,7 @@ struct GgotgalpiDemoApp: App {
         WindowGroup {
             ContentView()
                 .environmentObject(store)
+                .preferredColorScheme(.light)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .modelContainer(modelContainer)
