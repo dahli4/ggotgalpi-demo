@@ -311,7 +311,7 @@ struct AddReadingEntryView: View {
             }
             Button("취소", role: .cancel) {}
         } message: {
-            Text("30일 동안 휴지통에 보관되며, 이후 자동으로 영구 삭제됩니다.")
+            Text("\(store.trashRetentionDays)일 동안 휴지통에 보관되며, 이후 자동으로 영구 삭제됩니다.")
         }
         .onAppear {
             guard
